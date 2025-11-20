@@ -39,7 +39,6 @@
         .chapter-controls select { padding:8px 10px; font-size:14px; border-radius:6px; border:1px solid #ccc; }
         .chapter-controls button { padding:8px 12px; border-radius:6px; border:none; cursor:pointer; color:#fff; background:#2b78c8; }
         .chapter-controls button.green { background:#2ecc71; }
-        /* Đảm bảo nội dung không bị che bởi thanh sticky */
         #viewerContainer { margin-top: 20px; } 
     </style>
 </head>
@@ -87,7 +86,6 @@
 const COMIC_DATA_JSON = [
     {
         "title": "Truyện Yugi-Oh",
-        // Đây là tên thư mục chứa các Chap (ví dụ: YugiOh)
         "folder": "YugiOh", 
         "upload_date": "2025-11-16",
         "description": "Mô tả chuyện Yugi-Oh."
@@ -96,16 +94,19 @@ const COMIC_DATA_JSON = [
 ];
 
 const MAX_PAGES = 2000;
+// Thư mục gốc chứa truyện, tính từ index.html (index.html nằm trong Book/, Comic nằm cùng cấp)
 const COMIC_ROOT_FOLDER = "Comic/"; 
-// index.html nằm trong /Book/, Comic nằm cùng cấp với index.html, tức là /Book/Comic
+
 
 /* ================= ĐIỀU CHỈNH CHÍNH CHO GITHUB PAGES ================= */
 // Cấu hình lại hàm lấy BASE_PATH để đảm bảo đường dẫn tuyệt đối chính xác
 function getBasePath() {
-    const origin = window.location.origin; // e.g., https://huynt89.github.io
-    const path = window.location.pathname; // e.g., /Book/ or /Book/index.html
+    // e.g. https://huynt89.github.io/Book/index.html
+    const origin = window.location.origin; 
+    const path = window.location.pathname; // /Book/index.html
+    
+    // Đảm bảo BASE_PATH là gốc của thư mục: https://huynt89.github.io/Book/
     const folderPath = path.endsWith('/') ? path : path.substring(0, path.lastIndexOf('/') + 1);
-    // Kết quả sẽ là https://huynt89.github.io/Book/
     return origin + folderPath; 
 }
 const BASE_PATH = getBasePath();
@@ -113,13 +114,17 @@ const BASE_PATH = getBasePath();
 
 // Cấu hình lại hàm lấy GitHub Owner và Repo
 function getGitHubOwnerRepo() {
-    // hostname: huynt89.github.io
-    const host = window.location.hostname;
-    // owner: huynt89
-    const owner = host.split('.')[0]; 
-    // repo: huynt89.github.io
-    const repo = host; // Đối với User Pages, Repo là chính Hostname
-    return { owner, repo };
+    const host = window.location.hostname; // huynt89.github.io
+    const owner = host.split('.')[0];      // huynt89
+    
+    // Đối với User Pages (hostname là repo name), repo là host
+    const repo = host; 
+    
+    // Lấy thư mục gốc (nếu là project page)
+    const pathParts = window.location.pathname.split('/').filter(p => p !== '' && p !== 'index.html');
+    const rootDir = pathParts.join('/'); // Book
+    
+    return { owner, repo, rootDir }; // Thêm rootDir: "Book"
 }
 /* ================= END OF ADJUSTMENTS ================= */
 
@@ -169,7 +174,6 @@ async function loadComics() {
             comicDiv.classList.add('comic-item');
             const comicBaseFolder = comic.folder.split('/')[0];
             const comicLink = document.createElement('a');
-            // Link khi click sẽ chuyển sang trang xem truyện (viewer)
             comicLink.href = `index.html?folder=${encodeURIComponent(comicBaseFolder)}`;
             comicLink.innerHTML = `
                 <h3>${comic.title}</h3>
@@ -201,7 +205,7 @@ async function showViewerPage(folderParam) {
 
     const currentComic = COMIC_DATA_JSON.find(c => c.folder.split('/')[0] === comicBase);
     document.getElementById('mainTitle').textContent = currentComic ? currentComic.title : comicBase;
-    document.getElementById('subText').textContent = 'Loading chapters...'; // Tạm thời để hiện loading
+    document.getElementById('subText').textContent = 'Loading chapters...'; 
 
     const chapterSelect = document.getElementById('chapterSelect');
     const loadChapterBtn = document.getElementById('loadChapterBtn');
@@ -210,15 +214,17 @@ async function showViewerPage(folderParam) {
     chapterSelect.innerHTML = '';
 
     // --- LOGIC TẢI DANH SÁCH CHAP TỪ GITHUB API ---
-    const { owner, repo } = getGitHubOwnerRepo();
-    // Đường dẫn API (book/Comic/YugiOh)
-    const apiPath = `https://api.github.com/repos/${owner}/${repo}/contents/${COMIC_ROOT_FOLDER}${encodeURIComponent(comicBase)}`;
+    const { owner, repo, rootDir } = getGitHubOwnerRepo();
+    // Đường dẫn API: Book/Comic/YugiOh
+    // Cần phải encode cả rootDir (là 'Book')
+    const apiPath = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(rootDir)}/${COMIC_ROOT_FOLDER}${encodeURIComponent(comicBase)}`;
 
     let chapters = [];
     try {
         const res = await fetch(apiPath, { headers: { Accept: 'application/vnd.github.v3+json' } });
         if (!res.ok) throw new Error(`API ${res.status}`);
         const items = await res.json();
+        
         // Lọc thư mục con (Chapter)
         chapters = items.filter(it => it.type === 'dir').map(it => it.name).sort((a, b) => {
             // Sắp xếp theo số
@@ -230,7 +236,7 @@ async function showViewerPage(folderParam) {
         document.getElementById('subText').textContent = ''; // Xóa loading
     } catch (e) {
         console.warn('❌ Không lấy được danh sách chap từ GitHub API:', e);
-        document.getElementById('subText').textContent = '⚠️ Không thể tải danh sách Chap từ API.';
+        document.getElementById('subText').textContent = '⚠️ Không thể tải danh sách Chap từ API. (Kiểm tra folder và giới hạn API)';
     }
 
     let chapterToLoad = '';
@@ -277,14 +283,13 @@ async function showViewerPage(folderParam) {
     if (chapterToLoad) {
         loadComicPagesClean(`${comicBase}/${chapterToLoad}`);
     } else {
-        document.getElementById('viewerContainer').innerHTML = `<p class="error">⚠️ Không tìm thấy thư mục Chap nào trong <strong>/Book/Comic/${comicBase}</strong>. Vui lòng kiểm tra lại cấu trúc folder.</p>`;
+        document.getElementById('viewerContainer').innerHTML = `<p class="error">⚠️ Không tìm thấy thư mục Chap nào trong <strong>/${rootDir}/${COMIC_ROOT_FOLDER}${comicBase}</strong>. Vui lòng kiểm tra lại cấu trúc folder.</p>`;
     }
 }
 
 /* ================= LOAD IMAGES (clean mode) ================= */
 async function loadComicPagesClean(folderName, forceReload = false) {
     const viewer = document.getElementById('viewerContainer');
-    // if forceReload true clear existing images first
     viewer.innerHTML = '<p id="status-viewer">Đang tìm và tải các trang truyện...</p>';
     const statusViewerEl = document.getElementById('status-viewer');
 
@@ -295,11 +300,10 @@ async function loadComicPagesClean(folderName, forceReload = false) {
     for (let i = 0; i < MAX_PAGES; i++) {
         const pageNumber = i.toString().padStart(5, '0');
 
-        // Tạo URL tuyệt đối: https://huynt89.github.io/Book/ + Comic/YugiOh/Chap1 + /00000.jpg
+        // Tạo URL tuyệt đối: BASE_PATH (e.g., https://huynt89.github.io/Book/) + Comic/YugiOh/Chap1 + /00000.jpg
         const jpgUrl = encodeURI(`${BASE_PATH}${COMIC_ROOT_FOLDER}${folderName}/${pageNumber}.jpg`);
         const pngUrl = encodeURI(`${BASE_PATH}${COMIC_ROOT_FOLDER}${folderName}/${pageNumber}.png`);
 
-        // try jpg then png
         let found = false;
         if (await tryLoadImageIntoViewer(jpgUrl, viewer)) {
             found = true;
@@ -324,9 +328,10 @@ async function loadComicPagesClean(folderName, forceReload = false) {
 
     if (pagesLoaded === 0) {
         viewer.innerHTML = `<p class="error">❌ Không tìm thấy trang truyện nào. Kiểm tra: 
-            <br>1) Thư mục <strong>/Book/${COMIC_ROOT_FOLDER}${folderName}</strong> đã push chưa?
-            <br>2) Tên folder/file phân biệt chữ hoa/thường?
-            <br>3) File ảnh có tên dạng <strong>00000.jpg</strong>, <strong>00001.jpg</strong>, ...?</p>`;
+            <br>1) Đường dẫn ảnh: <strong>${BASE_PATH}${COMIC_ROOT_FOLDER}${folderName}/00000.jpg</strong> (ví dụ)
+            <br>2) Thư mục <strong>/${getGitHubOwnerRepo().rootDir}/${COMIC_ROOT_FOLDER}${folderName}</strong> đã push chưa?
+            <br>3) Tên folder/file phân biệt chữ hoa/thường?
+            <br>4) File ảnh có tên dạng <strong>00000.jpg</strong>, <strong>00001.jpg</strong>, ...?</p>`;
     } else {
         statusViewerEl.textContent = `✅ Hoàn tất tải ${pagesLoaded} trang.`;
     }
