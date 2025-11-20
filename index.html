@@ -23,27 +23,19 @@
         footer { text-align:center; padding:10px; background:#ecf0f1; color:#777; margin-top:30px; border-top:1px solid #ddd; }
         
         .error { color:#c0392b; text-align:center; font-weight: bold; }
-        /* Debug Info Box */
         #debugInfo { 
             background: #333; color: #0f0; font-family: monospace; padding: 10px; 
             margin-top: 10px; border-radius: 5px; font-size: 12px; text-align: left;
-            display: none; /* Mặc định ẩn, sẽ hiện khi có lỗi */
-            white-space: pre-wrap;
+            display: none; white-space: pre-wrap;
         }
 
         /* Sticky Controls */
         .chapter-controls-wrapper {
-            position: sticky; 
-            top: 0; 
-            z-index: 1000; 
-            background: #fff; 
-            border-bottom: 1px solid #ddd;
-            padding: 10px 0; 
-            box-shadow: 0 2px 5px rgba(0,0,0,.1);
+            position: sticky; top: 0; z-index: 1000; 
+            background: #fff; border-bottom: 1px solid #ddd;
+            padding: 10px 0; box-shadow: 0 2px 5px rgba(0,0,0,.1);
         }
-        .chapter-controls {
-            display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap;
-        }
+        .chapter-controls { display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; }
         .chapter-controls select { padding:8px 10px; font-size:14px; border-radius:6px; border:1px solid #ccc; }
         .chapter-controls button { padding:8px 12px; border-radius:6px; border:none; cursor:pointer; color:#fff; background:#2b78c8; }
         .chapter-controls button.green { background:#2ecc71; }
@@ -71,7 +63,6 @@
         </section>
         
         <section id="comicViewer" style="display:none;">
-            
             <div class="chapter-controls-wrapper"> 
                 <div class="chapter-controls" id="chapterControls">
                     <label for="chapterSelect">Chọn Chap:</label>
@@ -81,56 +72,45 @@
                 </div>
                 <div id="apiStatus" style="text-align: center; font-size: 0.9em; color: #e67e22; margin-top:5px;"></div>
             </div>
-            
-            <div id="debugInfo"></div> <div id="viewerContainer"></div>
+            <div id="debugInfo"></div>
+            <div id="viewerContainer"></div>
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2025 Web Truyện GitHub</p>
-    </footer>
+    <footer><p>&copy; 2025 Web Truyện GitHub</p></footer>
 
 <script>
-/* ================= CẤU HÌNH CỨNG (QUAN TRỌNG) ================= 
-   Phần này điền chính xác thông tin GitHub của bạn để tránh lỗi tự động đoán.
-*/
+/* ================= CẤU HÌNH CHÍNH XÁC (ĐÃ SỬA) ================= */
 const GITHUB_CONFIG = {
-    OWNER: 'huynt89',          // Tên tài khoản GitHub
-    REPO: 'huynt89.github.io', // Tên Repository
-    ROOT_DIR: 'Book',          // Thư mục gốc chứa web (Book)
-    COMIC_DIR: 'Comic'         // Thư mục chứa các truyện (Comic)
+    OWNER: 'huynt89',
+    REPO: 'Book',       // Tên Repository là "Book" (QUAN TRỌNG)
+    ROOT_DIR: '',       // Để trống vì Comic nằm ngay ngoài cùng của repo Book
+    COMIC_DIR: 'Comic'  // Tên thư mục truyện
 };
-// => Đường dẫn đầy đủ sẽ là: huynt89.github.io/Book/Comic/...
 
 const COMIC_DATA_JSON = [
     {
         "title": "Truyện Yugi-Oh",
-        "folder": "YugiOh", // Chỉ cần tên thư mục truyện
+        "folder": "YugiOh", 
         "upload_date": "2025-11-16",
         "description": "Vua Trò Chơi Yugi-Oh"
     }
 ];
 
-const MAX_PAGES = 200; // Số trang tối đa check mỗi chap
+const MAX_PAGES = 200; 
 
-/* ================= HÀM HỖ TRỢ ================= */
+/* ================= LOGIC LOAD ẢNH VÀ API ================= */
 
-// Tính toán đường dẫn cơ sở để load ảnh (http...)
+// Hàm lấy đường dẫn gốc để load ảnh (file .jpg)
 function getBaseImagePath() {
-    // Trả về: https://huynt89.github.io/Book/
     const origin = window.location.origin; 
-    // Kiểm tra nếu đang chạy local hay trên web để chỉnh path
     const pathname = window.location.pathname;
-    // Nếu path chứa /Book/ thì giữ lại, nếu không thì tính toán
-    if(pathname.includes('/Book/')) {
-        return origin + '/Book/';
-    }
+    // Nếu chạy trên huynt89.github.io/Book/ -> Base path là .../Book/
+    if(pathname.includes('/Book/')) return origin + '/Book/';
     return origin + pathname.substring(0, pathname.lastIndexOf('/') + 1);
 }
 const BASE_PATH = getBaseImagePath();
 
-
-/* ================= KHỞI TẠO ================= */
 document.addEventListener('DOMContentLoaded', initializePage);
 
 function initializePage() {
@@ -143,7 +123,6 @@ function initializePage() {
     }
 }
 
-/* ================= TRANG DANH SÁCH ================= */
 function showListPage() {
     document.getElementById('backLink').style.display = 'none';
     document.getElementById('mainTitle').textContent = 'Truyện Tranh Online';
@@ -154,14 +133,12 @@ function showListPage() {
     const loadBtn = document.getElementById('loadComicsBtn');
     loadBtn.removeEventListener('click', loadComics);
     loadBtn.addEventListener('click', loadComics);
-    // Tự động load danh sách luôn cho tiện
     loadComics();
 }
 
 function loadComics() {
     const comicsContainer = document.getElementById('comicsContainer');
     const statusEl = document.getElementById('status');
-    
     const comics = COMIC_DATA_JSON;
     comicsContainer.innerHTML = '';
     
@@ -169,7 +146,6 @@ function loadComics() {
         const comicDiv = document.createElement('div');
         comicDiv.classList.add('comic-item');
         const comicLink = document.createElement('a');
-        // Link: index.html?folder=YugiOh
         comicLink.href = `index.html?folder=${encodeURIComponent(comic.folder)}`;
         comicLink.innerHTML = `
             <h3>${comic.title}</h3>
@@ -182,24 +158,19 @@ function loadComics() {
     statusEl.textContent = `✅ Đã tải: ${comics.length} truyện.`;
 }
 
-/* ================= TRANG XEM TRUYỆN (VIEWER) ================= */
 async function showViewerPage(folderParam) {
-    // Ẩn danh sách, hiện viewer
     document.getElementById('controls').style.display = 'none';
     document.getElementById('comicList').style.display = 'none';
     document.getElementById('comicViewer').style.display = 'block';
     document.getElementById('backLink').style.display = 'block';
 
-    // folderParam ví dụ: "YugiOh" hoặc "YugiOh/Chap1"
     const parts = folderParam.split('/').filter(Boolean);
-    const comicBase = parts[0]; // "YugiOh"
+    const comicBase = parts[0]; 
     const initialChapter = parts.length > 1 ? parts.slice(1).join('/') : '';
 
-    // Cập nhật tiêu đề
     const currentComic = COMIC_DATA_JSON.find(c => c.folder === comicBase);
     document.getElementById('mainTitle').textContent = currentComic ? currentComic.title : comicBase;
 
-    // DOM Elements
     const chapterSelect = document.getElementById('chapterSelect');
     const apiStatus = document.getElementById('apiStatus');
     const debugInfo = document.getElementById('debugInfo');
@@ -209,48 +180,38 @@ async function showViewerPage(folderParam) {
     debugInfo.style.display = 'none';
 
     // --- XÂY DỰNG URL API CHÍNH XÁC ---
-    // URL dạng: https://api.github.com/repos/huynt89/huynt89.github.io/contents/Book/Comic/YugiOh
-    const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${GITHUB_CONFIG.ROOT_DIR}/${GITHUB_CONFIG.COMIC_DIR}/${encodeURIComponent(comicBase)}`;
+    // Logic: Nối các thành phần khác rỗng lại với nhau bằng dấu /
+    const path = [GITHUB_CONFIG.ROOT_DIR, GITHUB_CONFIG.COMIC_DIR, comicBase].filter(p => p).join('/');
+    const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${path}`;
 
     let chapters = [];
-    let errorMessage = '';
 
     try {
         const res = await fetch(apiUrl);
-        
-        // --- KIỂM TRA LỖI API ---
         if (!res.ok) {
-            if (res.status === 403) throw new Error("API Rate Limit Exceeded (Quá giới hạn request/giờ)");
-            if (res.status === 404) throw new Error("Không tìm thấy thư mục (404). Kiểm tra lại tên folder trên GitHub.");
-            throw new Error(`Lỗi API: ${res.status} ${res.statusText}`);
+            if (res.status === 404) throw new Error("Không tìm thấy (404). Sai tên Repo hoặc Folder.");
+            if (res.status === 403) throw new Error("API Rate Limit (Quá giới hạn)");
+            throw new Error(`Lỗi API: ${res.status}`);
         }
 
         const items = await res.json();
-        
-        // Lọc lấy thư mục (dir) và sắp xếp
         chapters = items
             .filter(item => item.type === 'dir')
             .map(item => item.name)
             .sort((a, b) => {
-                // Sắp xếp thông minh: Chap1, Chap2, Chap10 (thay vì Chap1, Chap10, Chap2)
                 const numA = parseInt((a.match(/\d+/) || [0])[0]);
                 const numB = parseInt((b.match(/\d+/) || [0])[0]);
                 return numA - numB;
             });
 
-        apiStatus.textContent = ''; // Xóa loading text
-
+        apiStatus.textContent = ''; 
     } catch (e) {
         console.error(e);
-        errorMessage = e.message;
-        apiStatus.innerHTML = `⚠️ Không tự động tải được danh sách Chap. <span style="cursor:pointer;text-decoration:underline;" onclick="document.getElementById('debugInfo').style.display='block'">Xem lỗi</span>`;
-        
-        // Hiển thị thông tin debug để bạn chụp ảnh nếu lỗi tiếp
-        debugInfo.innerHTML = `<strong>DEBUG INFO:</strong>\nUrl: ${apiUrl}\nError: ${e.message}\n\nHãy chụp ảnh này gửi cho tôi nếu chưa fix được.`;
+        apiStatus.innerHTML = `⚠️ Lỗi tải Chap. <span style="cursor:pointer;text-decoration:underline;" onclick="document.getElementById('debugInfo').style.display='block'">Xem chi tiết</span>`;
+        debugInfo.innerHTML = `<strong>DEBUG INFO:</strong>\nUrl: ${apiUrl}\nError: ${e.message}\nConfig: Repo=${GITHUB_CONFIG.REPO}, Folder=${path}`;
     }
 
-    // --- POPULATE DROPDOWN ---
-    chapterSelect.innerHTML = ''; // Clear "Đang tải..."
+    chapterSelect.innerHTML = ''; 
 
     if (chapters.length > 0) {
         chapters.forEach(ch => {
@@ -259,37 +220,25 @@ async function showViewerPage(folderParam) {
             opt.textContent = ch;
             chapterSelect.appendChild(opt);
         });
-        
-        // Chọn chapter
         if (initialChapter && chapters.includes(initialChapter)) {
             chapterSelect.value = initialChapter;
         } else {
             chapterSelect.selectedIndex = 0;
         }
         loadComicPagesClean(`${comicBase}/${chapterSelect.value}`);
-
     } else {
-        // FALLBACK KHI LỖI: Thêm thủ công Chap1 -> Chap10 để test
         const defaultChap = initialChapter || 'Chap1';
         const opt = document.createElement('option');
         opt.value = defaultChap;
-        opt.textContent = `${defaultChap} (Chế độ Offline/Lỗi)`;
+        opt.textContent = `${defaultChap} (Mặc định)`;
         chapterSelect.appendChild(opt);
-        
-        // Vẫn thử load ảnh của chap mặc định
         loadComicPagesClean(`${comicBase}/${defaultChap}`);
     }
 
-    // Gán sự kiện nút bấm
-    document.getElementById('loadChapterBtn').onclick = () => {
-        loadComicPagesClean(`${comicBase}/${chapterSelect.value}`);
-    };
-    document.getElementById('reloadBtn').onclick = () => {
-        loadComicPagesClean(`${comicBase}/${chapterSelect.value}`, true);
-    };
+    document.getElementById('loadChapterBtn').onclick = () => loadComicPagesClean(`${comicBase}/${chapterSelect.value}`);
+    document.getElementById('reloadBtn').onclick = () => loadComicPagesClean(`${comicBase}/${chapterSelect.value}`, true);
 }
 
-/* ================= LOAD ẢNH ================= */
 async function loadComicPagesClean(folderPath, forceReload = false) {
     const viewer = document.getElementById('viewerContainer');
     viewer.innerHTML = '<p id="status-viewer" style="color:#777;">⏳ Đang quét ảnh...</p>';
@@ -297,22 +246,17 @@ async function loadComicPagesClean(folderPath, forceReload = false) {
 
     let pagesLoaded = 0;
     let consecutiveMisses = 0;
-    const maxConsecutiveMisses = 5; // Giảm xuống để quét nhanh hơn
-
-    // Xây dựng URL thư mục ảnh: https://huynt89.github.io/Book/Comic/YugiOh/Chap1/
+    
+    // Tạo URL ảnh: .../Book/Comic/YugiOh/Chap1/
     const imageBaseUrl = `${BASE_PATH}${GITHUB_CONFIG.COMIC_DIR}/${folderPath}/`;
 
     for (let i = 0; i < MAX_PAGES; i++) {
-        // Tạo tên file: 00000.jpg, 00001.jpg (padding 5 số)
         const pageNumber = i.toString().padStart(5, '0');
-        
         const jpgUrl = imageBaseUrl + pageNumber + ".jpg";
-        const pngUrl = imageBaseUrl + pageNumber + ".png"; // Dự phòng png
+        const pngUrl = imageBaseUrl + pageNumber + ".png";
 
         let found = false;
-        // Thử load JPG trước
         if (await tryLoadImage(jpgUrl, viewer)) found = true;
-        // Nếu không có JPG, thử PNG
         else if (await tryLoadImage(pngUrl, viewer)) found = true;
 
         if (found) {
@@ -323,20 +267,12 @@ async function loadComicPagesClean(folderPath, forceReload = false) {
             consecutiveMisses++;
         }
 
-        // Dừng nếu sai liên tiếp 5 lần (hết truyện)
-        if (pagesLoaded > 0 && consecutiveMisses >= maxConsecutiveMisses) break;
-        // Dừng nếu quét 20 file đầu mà không thấy gì
+        if (pagesLoaded > 0 && consecutiveMisses >= 5) break;
         if (pagesLoaded === 0 && i > 20) break;
     }
 
     if (pagesLoaded === 0) {
-        viewer.innerHTML = `
-            <div class="error">
-                <p>❌ Không tìm thấy ảnh nào trong: <strong>${folderPath}</strong></p>
-                <p style="font-size:0.8em; color:#555;">
-                    Link thử nghiệm: <a href="${imageBaseUrl}00000.jpg" target="_blank">Click để kiểm tra file 00000.jpg</a>
-                </p>
-            </div>`;
+        viewer.innerHTML = `<div class="error"><p>❌ Không tìm thấy ảnh.</p><p style="font-size:0.8em">Check link: ${imageBaseUrl}00000.jpg</p></div>`;
     } else {
         statusViewerEl.textContent = `✅ Hoàn tất: ${pagesLoaded} trang.`;
     }
