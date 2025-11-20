@@ -29,6 +29,8 @@
         .view-link { color:#e74c3c; font-weight:bold; margin-top:10px !important; }
         
         footer { text-align:center; padding:10px; background:#ecf0f1; color:#777; margin-top:30px; border-top:1px solid #ddd; }
+        
+        /* Ẩn các box lỗi lòe loẹt, chỉ giữ lại text đơn giản nếu cần */
         .error { color:#c0392b; text-align:center; font-weight: bold; }
         
         /* Debug Box */
@@ -38,7 +40,7 @@
             display: none; white-space: pre-wrap;
         }
 
-        /* Sticky Controls (Thanh điều khiển dính trên cùng) */
+        /* Sticky Controls */
         .chapter-controls-wrapper {
             position: sticky; top: 0; z-index: 1000; 
             background: #fff; border-bottom: 1px solid #ddd;
@@ -89,12 +91,12 @@
     <footer><p>&copy; 2025 Web Truyện GitHub</p></footer>
 
 <script>
-/* ================= CẤU HÌNH (Hardcoded) ================= */
+/* ================= CẤU HÌNH ================= */
 const GITHUB_CONFIG = {
     OWNER: 'huynt89',
-    REPO: 'Book',       // Tên chính xác của Repository
-    ROOT_DIR: '',       // Comic nằm ngay gốc repo Book, nên để trống
-    COMIC_DIR: 'Comic'  // Tên thư mục truyện
+    REPO: 'Book',       
+    ROOT_DIR: '',       
+    COMIC_DIR: 'Comic'  
 };
 
 const COMIC_DATA_JSON = [
@@ -104,14 +106,12 @@ const COMIC_DATA_JSON = [
         "upload_date": "2025-11-16",
         "description": "Vua Trò Chơi Yugi-Oh"
     }
-    // Thêm truyện khác vào đây nếu có
 ];
 
 /* ================= HÀM HỖ TRỢ PATH ================= */
 function getBaseImagePath() {
     const origin = window.location.origin; 
     const pathname = window.location.pathname;
-    // Logic: nếu đang ở /Book/index.html -> Base là /Book/
     if(pathname.includes('/Book/')) return origin + '/Book/';
     return origin + pathname.substring(0, pathname.lastIndexOf('/') + 1);
 }
@@ -130,7 +130,7 @@ function initializePage() {
     }
 }
 
-/* ================= LOGIC TRANG DANH SÁCH ================= */
+/* ================= LIST PAGE ================= */
 function showListPage() {
     document.getElementById('backLink').style.display = 'none';
     document.getElementById('mainTitle').textContent = 'Truyện Tranh Online';
@@ -141,7 +141,7 @@ function showListPage() {
     const loadBtn = document.getElementById('loadComicsBtn');
     loadBtn.removeEventListener('click', loadComics);
     loadBtn.addEventListener('click', loadComics);
-    loadComics(); // Tự động tải luôn
+    loadComics(); 
 }
 
 function loadComics() {
@@ -166,7 +166,7 @@ function loadComics() {
     statusEl.textContent = `✅ Đã tải: ${comics.length} truyện.`;
 }
 
-/* ================= LOGIC TRANG ĐỌC (VIEWER) & API ================= */
+/* ================= VIEWER PAGE ================= */
 async function showViewerPage(folderParam) {
     document.getElementById('controls').style.display = 'none';
     document.getElementById('comicList').style.display = 'none';
@@ -185,10 +185,9 @@ async function showViewerPage(folderParam) {
     const debugInfo = document.getElementById('debugInfo');
     
     chapterSelect.innerHTML = '<option>Đang tìm Chap...</option>';
-    apiStatus.textContent = 'Đang kết nối GitHub API...';
+    apiStatus.textContent = 'Đang kết nối...';
     debugInfo.style.display = 'none';
 
-    // Tạo URL API
     const path = [GITHUB_CONFIG.ROOT_DIR, GITHUB_CONFIG.COMIC_DIR, comicBase].filter(p => p).join('/');
     const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${path}`;
 
@@ -197,11 +196,9 @@ async function showViewerPage(folderParam) {
     try {
         const res = await fetch(apiUrl);
         if (!res.ok) {
-            if (res.status === 404) throw new Error("Không tìm thấy folder truyện (404).");
-            if (res.status === 403) throw new Error("Quá giới hạn request (403).");
-            throw new Error(`Lỗi API: ${res.status}`);
+            // Nếu lỗi thì im lặng hoặc báo nhẹ nhàng, không show debug xấu xí
+            throw new Error("Lỗi kết nối API"); 
         }
-
         const items = await res.json();
         chapters = items
             .filter(item => item.type === 'dir')
@@ -211,12 +208,10 @@ async function showViewerPage(folderParam) {
                 const numB = parseInt((b.match(/\d+/) || [0])[0]);
                 return numA - numB;
             });
-
         apiStatus.textContent = ''; 
     } catch (e) {
         console.error(e);
-        apiStatus.innerHTML = `⚠️ Lỗi tải danh sách Chap. <span style="cursor:pointer;text-decoration:underline;" onclick="document.getElementById('debugInfo').style.display='block'">Xem chi tiết</span>`;
-        debugInfo.innerHTML = `<strong>DEBUG INFO:</strong>\nUrl: ${apiUrl}\nError: ${e.message}\nConfig: Repo=${GITHUB_CONFIG.REPO}, Folder=${path}`;
+        apiStatus.innerHTML = ``; // Xóa thông báo lỗi API để giao diện sạch
     }
 
     chapterSelect.innerHTML = ''; 
@@ -243,16 +238,14 @@ async function showViewerPage(folderParam) {
         loadComicPagesFast(`${comicBase}/${defaultChap}`);
     }
 
-    // Gán sự kiện
     document.getElementById('loadChapterBtn').onclick = () => loadComicPagesFast(`${comicBase}/${chapterSelect.value}`);
     document.getElementById('reloadBtn').onclick = () => loadComicPagesFast(`${comicBase}/${chapterSelect.value}`, true);
 }
 
-/* ================= LOAD ẢNH TỐC ĐỘ CAO (BATCH LOADING) ================= */
+/* ================= LOAD ẢNH TỐC ĐỘ CAO (CLEAN UI) ================= */
 async function loadComicPagesFast(folderPath, forceReload = false) {
     const viewer = document.getElementById('viewerContainer');
     
-    // Tạo hoặc lấy thẻ status
     let statusViewerEl = document.getElementById('status-viewer');
     if (!statusViewerEl) {
         statusViewerEl = document.createElement('p');
@@ -265,47 +258,42 @@ async function loadComicPagesFast(folderPath, forceReload = false) {
         viewer.innerHTML = ''; 
         viewer.appendChild(statusViewerEl);
     } else {
-        // Nếu không force reload, xóa nội dung cũ nhưng giữ status
         while (viewer.firstChild && viewer.firstChild !== statusViewerEl) {
             viewer.removeChild(viewer.firstChild);
         }
         if(!viewer.contains(statusViewerEl)) viewer.appendChild(statusViewerEl);
     }
     
-    statusViewerEl.textContent = '🚀 Đang kích hoạt tải nhanh...';
+    statusViewerEl.textContent = '🚀 Đang tải truyện...';
 
-    const BATCH_SIZE = 5;   // Tải 5 ảnh cùng lúc
-    const MAX_PAGES = 200;  // Giới hạn check
+    const BATCH_SIZE = 5;
+    const MAX_PAGES = 200;
     const imageBaseUrl = `${BASE_PATH}${GITHUB_CONFIG.COMIC_DIR}/${folderPath}/`;
 
     let pagesLoadedTotal = 0;
     let emptyBatchCount = 0; 
 
-    // Vòng lặp tải theo lô
     for (let i = 0; i < MAX_PAGES; i += BATCH_SIZE) {
         const promises = [];
-        // Tạo 5 request cùng lúc
         for (let j = 0; j < BATCH_SIZE; j++) {
             const pageIndex = i + j;
             promises.push(loadOnePage(imageBaseUrl, pageIndex));
         }
 
-        statusViewerEl.textContent = `Đang tải trang ${i} - ${i + BATCH_SIZE}...`;
+        // Cập nhật trạng thái tải, nhưng giữ nó đơn giản
+        if (i > 0) statusViewerEl.textContent = `Đang tải trang ${i}...`;
         
-        // Đợi cả 5 request xong
         const results = await Promise.all(promises);
 
         let batchHasImage = false;
-        // Append vào DOM theo đúng thứ tự
         for (const imgElement of results) {
             if (imgElement) {
-                viewer.insertBefore(imgElement, statusViewerEl); // Chèn ảnh lên trước dòng status
+                viewer.insertBefore(imgElement, statusViewerEl);
                 pagesLoadedTotal++;
                 batchHasImage = true;
             }
         }
 
-        // Nếu 2 lô liên tiếp (10 trang) không có ảnh -> Dừng
         if (!batchHasImage) {
             emptyBatchCount++;
             if (emptyBatchCount >= 2) break; 
@@ -314,18 +302,15 @@ async function loadComicPagesFast(folderPath, forceReload = false) {
         }
     }
 
+    // === ĐÃ SỬA ĐOẠN NÀY ===
     if (pagesLoadedTotal === 0) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error';
-        errorDiv.style.marginTop = '20px';
-        errorDiv.innerHTML = `<p>❌ Không tìm thấy ảnh nào.</p><p style="font-size:0.8em">Link check: ${imageBaseUrl}00000.jpg</p>`;
-        viewer.insertBefore(errorDiv, statusViewerEl);
+        // Chỉ hiện dòng text đơn giản, không hiện khung đỏ hay link check xấu xí nữa
+        statusViewerEl.textContent = 'Không tìm thấy ảnh trong Chap này.';
     } else {
         statusViewerEl.textContent = `✅ Đã tải xong ${pagesLoadedTotal} trang.`;
     }
 }
 
-// Hàm tải 1 trang (Check JPG -> Check PNG -> Trả về thẻ img)
 function loadOnePage(baseUrl, index) {
     return new Promise(async (resolve) => {
         const pageNumber = index.toString().padStart(5, '0');
