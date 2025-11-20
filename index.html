@@ -51,12 +51,10 @@
 	 	 	 	 	 	 </div>
 	 	 	 	 </section>
 	 	 	 		
-	 	 	 	 <!-- Viewer -->
-	 	 	 	 <section id="comicViewer" style="display:none;">
+	 	 	 	 	 	 	 	 <section id="comicViewer" style="display:none;">
 	 	 	 	 	 	 <div class="small-note" id="viewerNote">Cuộn xuống để đọc truyện</div>
 
-	 	 	 	 	 	 <!-- chapter controls: select + load + reload -->
-	 	 	 	 	 	 <div class="chapter-controls" id="chapterControls" style="display:none;">
+	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 <div class="chapter-controls" id="chapterControls">
 	 	 	 	 	 	 	 	 <label for="chapterSelect">Chọn Chap:</label>
 	 	 	 	 	 	 	 	 <select id="chapterSelect"></select>
 	 	 	 	 	 	 	 	 <button id="loadChapterBtn" class="green">Load Chapter</button>
@@ -195,7 +193,7 @@ async function showViewerPage(folderParam) {
 
 	 	 // reset viewer
 	 	 document.getElementById('viewerContainer').innerHTML = '';
-	 	 chapterControlsEl.style.display = 'none';
+	 	 // chapterControlsEl.style.display đã được xóa ở HTML, chỉ cần clear select
 	 	 chapterSelect.innerHTML = '';
 
 	 	 // try fetch list of directories under book/Comic/<comicBase>
@@ -210,7 +208,7 @@ async function showViewerPage(folderParam) {
 	 	 	 	 // filter directories only
 	 	 	 	 chapters = items.filter(it => it.type === 'dir').map(it => it.name).sort();
 	 	 } catch (e) {
-	 	 	 	 // API failed (rate limit or other) -> fallback: if initialChapter present, use that only
+	 	 	 	 // API failed (rate limit or other) -> fallback
 	 	 	 	 console.warn('Không lấy được danh sách chap từ GitHub API:', e);
 	 	 }
 
@@ -229,31 +227,31 @@ async function showViewerPage(folderParam) {
 	 	 	 	 	 	 const foundOpt = Array.from(chapterSelect.options).find(o => o.value === want);
 	 	 	 	 	 	 if (foundOpt) chapterSelect.value = want;
 	 	 	 	 }
-	 	 	 	 chapterControlsEl.style.display = 'flex';
-	 	 	 	 // event handlers
-	 	 	 	 loadChapterBtn.onclick = () => {
-	 	 	 	 	 	 const sel = chapterSelect.value;
-	 	 	 	 	 	 loadComicPagesClean(`${comicBase}/${sel}`);
-	 	 	 	 };
-	 	 	 	 reloadBtn.onclick = () => {
-	 	 	 	 	 	 const sel = chapterSelect.value;
-	 	 	 	 	 	 // clear images then reload same chapter
-	 	 	 	 	 	 loadComicPagesClean(`${comicBase}/${sel}`, true);
-	 	 	 	 };
-
-	 	 	 	 // auto-load selected chapter immediately
-	 	 	 	 const selectedValue = chapterSelect.value;
-	 	 	 	 loadComicPagesClean(`${comicBase}/${selectedValue}`);
 	 	 } else {
-	 	 	 	 // no chapter list from API: fallback to folderParam (if it includes chap), else try to load Chap1
-	 	 	 	 if (initialChapter) {
-	 	 	 	 	 	 loadComicPagesClean(`${comicBase}/${initialChapter}`);
-	 	 	 	 } else {
-	 	 	 	 	 	 // try Chap1 by default (common pattern)
-	 	 	 	 	 	 loadComicPagesClean(`${comicBase}/Chap1`);
-	 	 	 	 }
-	 	 	 	 // controls remain hidden if chapters not available
+	 	 	 	 // Không có danh sách chapter từ API: chỉ thêm chapter hiện tại (hoặc Chap1 mặc định)
+	 	 	 	 const defaultChapter = initialChapter || 'Chap1';
+	 	 	 	 const opt = document.createElement('option');
+	 	 	 	 opt.value = defaultChapter;
+	 	 	 	 opt.textContent = defaultChapter + (initialChapter ? '' : ' (Mặc định)');
+	 	 	 	 chapterSelect.appendChild(opt);
 	 	 }
+
+	 	 // Các controls này sẽ được hiển thị nhờ vào việc xóa style="display:none;" trong HTML
+
+	 	 // event handlers
+	 	 loadChapterBtn.onclick = () => {
+	 	 	 	 const sel = chapterSelect.value;
+	 	 	 	 loadComicPagesClean(`${comicBase}/${sel}`);
+	 	 };
+	 	 reloadBtn.onclick = () => {
+	 	 	 	 const sel = chapterSelect.value;
+	 	 	 	 // clear images then reload same chapter
+	 	 	 	 loadComicPagesClean(`${comicBase}/${sel}`, true);
+	 	 };
+
+	 	 // auto-load selected chapter immediately
+	 	 const selectedValue = chapterSelect.value;
+	 	 loadComicPagesClean(`${comicBase}/${selectedValue}`);
 }
 
 /* ================= LOAD IMAGES (clean mode) =================
