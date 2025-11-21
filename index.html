@@ -242,100 +242,84 @@ async function showViewerPage(folderParam) {
     document.getElementById('reloadBtn').onclick = () => loadComicPagesFast(`${comicBase}/${chapterSelect.value}`, true);
 }
 
-/* ================= LOAD ẢNH TỐC ĐỘ CAO (CLEAN UI) ================= */
-async function loadComicPagesFast(folderPath, forceReload = false) {
+/* ================= LOAD ẢNH BẰNG API (KHÔNG DÙNG VÒNG LẶP ĐOÁN) ================= */
+async function loadComicPagesFast(folderPath) {
     const viewer = document.getElementById('viewerContainer');
+    const statusViewerEl = createOrGetStatusElement(viewer);
+    viewer.innerHTML = ''; // Xóa hết ảnh cũ
+    viewer.appendChild(statusViewerEl);
     
+    statusViewerEl.textContent = '🚀 Đang kết nối GitHub API để lấy danh sách ảnh...';
+
+    const [comicBase, chapterFolder] = folderPath.split('/');
+    // Tạo đường dẫn API đầy đủ tới thư mục Chapter
+    const fullPath = [GITHUB_CONFIG.ROOT_DIR, GITHUB_CONFIG.COMIC_DIR, comicBase, chapterFolder].filter(p => p).join('/');
+    const apiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${fullPath}`;
+
+    try {
+        const res = await fetch(apiUrl);
+        if (!res.ok) {
+            throw new Error(`GitHub API Error: ${res.statusText}. API path: ${apiUrl}`);
+        }
+        const items = await res.json();
+        
+        // 1. Lọc và Sắp xếp tên file ảnh
+        const imageFiles = items
+            .filter(item => item.type === 'file' && (item.name.endsWith('.jpg') || item.name.endsWith('.png')))
+            .map(item => item.name)
+            .sort((a, b) => {
+                // Sắp xếp theo số trang (ví dụ: '0055.jpg' -> 55).
+                // Regex lấy ra số (dù là 0, 000, 0000, hay 00000)
+                const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+                const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+                return numA - numB;
+            });
+
+        if (imageFiles.length === 0) {
+            statusViewerEl.textContent = 'Không tìm thấy bất kỳ file ảnh nào trong chương này (.jpg hoặc .png).';
+            return;
+        }
+
+        // 2. Tạo URL cơ sở và hiển thị ảnh
+        // BASE_PATH thường là URL gốc của repo trên GitHub Pages 
+        const baseContentUrl = `${BASE_PATH}${GITHUB_CONFIG.COMIC_DIR}/${folderPath}/`;
+        
+        const fragment = document.createDocumentFragment();
+        imageFiles.forEach((fileName, index) => {
+            const img = document.createElement('img');
+            img.className = 'comic-page';
+            img.alt = `Trang ${index + 1} (${fileName})`;
+            // Gán source ảnh bằng TÊN FILE THỰC TẾ đã lấy từ API
+            img.src = baseContentUrl + fileName;
+            fragment.appendChild(img);
+        });
+
+        // 3. Hiển thị tất cả ảnh cùng lúc
+        viewer.insertBefore(fragment, statusViewerEl);
+
+        statusViewerEl.textContent = `✅ Đã tải xong ${imageFiles.length} trang từ danh sách file.`;
+
+    } catch (e) {
+        console.error("Lỗi khi tải trang bằng API:", e);
+        statusViewerEl.textContent = `❌ Lỗi: Không thể tải ảnh. Vui lòng kiểm tra cấu hình GitHub và API.`;
+    }
+}
+
+// Hàm hỗ trợ tạo/lấy status element
+function createOrGetStatusElement(viewer) {
     let statusViewerEl = document.getElementById('status-viewer');
     if (!statusViewerEl) {
         statusViewerEl = document.createElement('p');
         statusViewerEl.id = 'status-viewer';
         statusViewerEl.style.color = '#777';
         statusViewerEl.style.fontStyle = 'italic';
+        statusViewerEl.style.textAlign = 'center';
+        // statusViewerEl sẽ được chèn vào viewer ở đầu hàm loadComicPagesFast
     }
-
-    if (forceReload) {
-        viewer.innerHTML = ''; 
-        viewer.appendChild(statusViewerEl);
-    } else {
-        while (viewer.firstChild && viewer.firstChild !== statusViewerEl) {
-            viewer.removeChild(viewer.firstChild);
-        }
-        if(!viewer.contains(statusViewerEl)) viewer.appendChild(statusViewerEl);
-    }
-    
-    statusViewerEl.textContent = '🚀 Đang tải truyện...';
-
-    const BATCH_SIZE = 5;
-    const MAX_PAGES = 200;
-    const imageBaseUrl = `${BASE_PATH}${GITHUB_CONFIG.COMIC_DIR}/${folderPath}/`;
-
-    let pagesLoadedTotal = 0;
-    let emptyBatchCount = 0; 
-
-    for (let i = 0; i < MAX_PAGES; i += BATCH_SIZE) {
-        const promises = [];
-        for (let j = 0; j < BATCH_SIZE; j++) {
-            const pageIndex = i + j;
-            promises.push(loadOnePage(imageBaseUrl, pageIndex));
-        }
-
-        // Cập nhật trạng thái tải, nhưng giữ nó đơn giản
-        if (i > 0) statusViewerEl.textContent = `Đang tải trang ${i}...`;
-        
-        const results = await Promise.all(promises);
-
-        let batchHasImage = false;
-        for (const imgElement of results) {
-            if (imgElement) {
-                viewer.insertBefore(imgElement, statusViewerEl);
-                pagesLoadedTotal++;
-                batchHasImage = true;
-            }
-        }
-
-        if (!batchHasImage) {
-            emptyBatchCount++;
-            if (emptyBatchCount >= 2) break; 
-        } else {
-            emptyBatchCount = 0;
-        }
-    }
-
-    // === ĐÃ SỬA ĐOẠN NÀY ===
-    if (pagesLoadedTotal === 0) {
-        // Chỉ hiện dòng text đơn giản, không hiện khung đỏ hay link check xấu xí nữa
-        statusViewerEl.textContent = 'Không tìm thấy ảnh trong Chap này.';
-    } else {
-        statusViewerEl.textContent = `✅ Đã tải xong ${pagesLoadedTotal} trang.`;
-    }
+    return statusViewerEl;
 }
 
-function loadOnePage(baseUrl, index) {
-    return new Promise(async (resolve) => {
-        const pageNumber = index.toString().padStart(5, '0');
-        const jpgUrl = baseUrl + pageNumber + ".jpg";
-        const pngUrl = baseUrl + pageNumber + ".png";
-
-        const checkImage = (url) => {
-            return new Promise((res) => {
-                const img = new Image();
-                img.onload = () => {
-                    img.className = 'comic-page';
-                    img.alt = `Trang ${index}`;
-                    res(img);
-                };
-                img.onerror = () => res(null);
-                img.src = url;
-            });
-        };
-
-        let img = await checkImage(jpgUrl);
-        if (!img) img = await checkImage(pngUrl);
-        
-        resolve(img);
-    });
-}
+// Hàm loadOnePage không còn cần thiết và đã bị loại bỏ.
 
 /* ================= BACK LINK ================= */
 document.getElementById('backLink').addEventListener('click', function(e) {
