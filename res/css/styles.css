@@ -1,0 +1,128 @@
+body { 
+    font-family: Arial, sans-serif; 
+    line-height: 1.6; 
+    margin:0; 
+    padding:0; 
+    background:#f4f4f9; 
+    color:#333; 
+}
+
+/* ================= HEADER VÀ CĂN CHỈNH ================= */
+header { 
+    background:#3498db; 
+    color:#fff; 
+    padding:15px 20px; /* HEADER NHỎ HƠN */
+    box-shadow:0 2px 4px rgba(0,0,0,.1); 
+    position:relative; 
+}
+
+#headerContent {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center; 
+    align-items: center; 
+    text-align: center;
+}
+
+#titleGroup h1 { 
+    margin:0; 
+    font-size: 1.8em; 
+}
+#titleGroup #subText {
+    margin: 0; 
+    font-size: 0.9em; 
+    opacity: 0.9;
+}
+
+/* Ẩn hoàn toàn nút Tải DS Truyện cũ và trạng thái */
+#controls {
+    display: none !important;
+}
+
+/* Nút Quay Lại */
+.back-link { 
+    position:absolute; 
+    left:20px; 
+    top:15px; 
+    color:#fff; 
+    text-decoration:none; 
+    font-weight:bold; 
+    font-size:1em;
+    padding: 5px 10px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    z-index: 10;
+}
+.back-link:hover {
+     background: rgba(0, 0, 0, 0.3);
+}
+
+main { max-width:1200px; margin:20px auto; padding:0 20px; }
+
+/* ================= DANH SÁCH TRUYỆN ================= */
+h2 { border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-top: 30px; }
+#comicsContainer { 
+    display:grid; 
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+    gap:20px; 
+    margin-top:20px; 
+}
+.comic-item { 
+    background:#fff; 
+    border:1px solid #ddd; 
+    border-radius:8px; 
+    box-shadow:0 2px 5px rgba(0,0,0,.05); 
+    overflow:hidden; 
+    transition:transform .2s;
+    text-align: center; 
+}
+.comic-item:hover { 
+    transform:translateY(-5px); 
+    box-shadow:0 8px 15px rgba(0,0,0,.1);
+}
+.comic-item a { 
+    display:block; 
+    padding:10px; 
+    text-decoration:none; 
+    color:inherit; 
+}
+.comic-cover {
+    width: 100%;
+    height: 250px; 
+    object-fit: cover; 
+    border-radius: 5px;
+    margin-bottom: 8px;
+    display: block;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+.comic-item h3 { 
+    color:#3498db; 
+    margin:0 0 5px 0; 
+    font-size: 1.1em;
+}
+.comic-item p {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 0;
+}
+
+/* ================= KHUNG XEM TRUYỆN ================= */
+.chapter-controls-wrapper {
+    position: sticky; top: 0; z-index: 1000; 
+    background: #fff; border-bottom: 1px solid #ddd;
+    padding: 10px 0; box-shadow: 0 2px 5px rgba(0,0,0,.1);
+}
+.chapter-controls { display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; }
+.chapter-controls select { padding:8px 10px; font-size:14px; border-radius:6px; border:1px solid #ccc; }
+.chapter-controls button { padding:8px 12px; border-radius:6px; border:none; cursor:pointer; color:#fff; background:#2b78c8; }
+
+#viewerContainer { text-align:center; padding:20px 0; margin-top: 0; background: #ecf0f1; border-radius: 8px; }
+.comic-page-container { margin: 10px 0; display: inline-block; max-width: 100%; }
+.comic-page { max-width:100%; height:auto; display:block; margin:0 auto 10px auto; border:1px solid #ddd; box-shadow:0 4px 8px rgba(0,0,0,.1); }
+.error-icon { color:#c0392b; font-weight: bold; margin-top: 5px; display: block; text-align: center; }
+
+footer { text-align:center; padding:10px; background:#ecf0f1; color:#777; margin-top:30px; border-top:1px solid #ddd; }
+
+/* Ẩn các box lỗi lòe loẹt, chỉ giữ lại text đơn giản nếu cần */
+.error { color:#c0392b; text-align:center; font-weight: bold; }
