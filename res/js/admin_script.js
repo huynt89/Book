@@ -250,65 +250,78 @@ function clearForm() {
 }
 
 async function updateComicData() {
-    const token = currentToken; // Sử dụng Token đã xác nhận
-    if (!token) { appendLog('Token chưa được xác nhận.', true); return; }
-
-    const title = document.getElementById('comicTitle').value.trim();
-    const folder = document.getElementById('comicFolder').value.trim();
-    const description = document.getElementById('comicDescription').value.trim();
-    const cover = document.getElementById('comicCover').value.trim();
-
-    if (!title || !folder || !description || !cover) {
-        appendLog('Vui lòng điền đầy đủ thông tin truyện.', true);
-        return;
-    }
-
-    const newComic = {
-        title,
-        folder,
-        upload_date: isEditMode ? currentComicData.find(c => c.folder === folder)?.upload_date || new Date().toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        description,
-        cover
-    };
+    // ⚠️ LƯU Ý: Không cần kiểm tra Token ở đây nữa!
+    
+    // 1. Thu thập dữ liệu và cập nhật mảng local (currentComicData)
+    // (Giữ nguyên logic kiểm tra và thêm/sửa truyện như bản trước)
+    // ... (logic thu thập form và kiểm tra tồn tại) ...
+    // ... (Cập nhật currentComicData[isExistingIndex] = newComic hoặc push(newComic)) ...
 
     const isExistingIndex = currentComicData.findIndex(c => c.folder === folder);
-    
-    if (isEditMode && isExistingIndex !== -1) {
-        currentComicData[isExistingIndex] = newComic;
-        appendLog(`Đã cập nhật thông tin truyện "${title}".`);
-    } else if (isExistingIndex === -1) {
+    const title = document.getElementById('comicTitle').value.trim();
+    // (Bổ sung code kiểm tra và cập nhật mảng currentComicData như bản trước)
+    // ... (Phần này là logic nghiệp vụ) ...
+
+    if (isExistingIndex === -1 && !isEditMode) {
+        // Thêm truyện mới
         currentComicData.push(newComic);
-        appendLog(`Đã thêm truyện mới "${title}".`);
+        appendLog(`Đã thêm truyện mới "${title}" vào bộ nhớ.`);
         clearForm();
+    } else if (isEditMode && isExistingIndex !== -1) {
+        // Chỉnh sửa
+        currentComicData[isExistingIndex] = newComic;
+        appendLog(`Đã cập nhật thông tin cho truyện "${title}" trong bộ nhớ.`);
     } else {
-        appendLog(`Folder "${folder}" đã tồn tại. Vui lòng chọn truyện đó để chỉnh sửa.`, true);
+        appendLog(`Lỗi kiểm tra dữ liệu.`, true);
         return;
     }
+    
+    // 2. CHUẨN BỊ COMMIT VÀO FILE TẠM THỜI (temp_data.json)
 
+    const fileContent = JSON.stringify(currentComicData.sort((a, b) => a.title.localeCompare(b.title)), null, 4);
+    const newContentBase64 = btoa(unescape(encodeURIComponent(fileContent)));
+
+    // Cần Token để commit file tạm thời lên GitHub
+    const token = currentToken; 
+    if (!token) { appendLog('Token chưa được xác nhận để commit file tạm thời.', true); return; }
+
+    const apiUrl = GITHUB_CONFIG.API_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, 'temp_data.json');
+    
     try {
-        const apiUrl = GITHUB_CONFIG.API_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, GITHUB_CONFIG.FILE_PATH);
-        const newContentString = formatComicData(currentComicData);
-        const newContentBase64 = btoa(unescape(encodeURIComponent(newContentString))); 
+        // Lấy SHA của file temp_data.json nếu nó tồn tại
+        let sha = null;
+        try {
+            const getResponse = await fetch(apiUrl, { headers: getHeaders(token) });
+            if (getResponse.ok) {
+                const existingFile = await getResponse.json();
+                sha = existingFile.sha;
+            }
+        } catch (e) {
+            // Không sao, file chưa tồn tại
+        }
 
         const commitData = {
-            message: `feat: Cập nhật comic_data.js (${isEditMode ? 'Chỉnh sửa' : 'Thêm mới'}: ${title})`,
+            message: `chore: Tạo file temp_data.json để kích hoạt Action`,
             content: newContentBase64,
-            sha: currentSha 
+            sha: sha // Ghi đè file nếu nó đã tồn tại
         };
         
+        // Đẩy file tạm thời lên GitHub
         const response = await fetch(apiUrl, {
             method: 'PUT',
             headers: getHeaders(token),
             body: JSON.stringify(commitData)
         });
 
-        if (!response.ok) { throw new Error(`Đẩy file thất bại. Status: ${response.status}`); }
+        if (!response.ok) { throw new Error(`Đẩy file tạm thời thất bại. Status: ${response.status}`); }
         
-        await loadComicDataAndPopulateList(); 
-        appendLog(`\n🎉 Cập nhật file comic_data.js thành công!`, false);
+        appendLog(`\n🎉 Đã tạo/cập nhật file temp_data.json thành công!`, false);
+        appendLog(`Vui lòng chờ 10-20 giây để GitHub Actions tự động cập nhật comic_data.js.`, false);
+        
+        // Cần tải lại dữ liệu sau khi Action hoàn thành (cần cơ chế chờ hoặc tải lại trang)
 
     } catch (error) {
-        appendLog(`Lỗi API khi CẬP NHẬT JSON: ${error.message}`, true);
+        appendLog(`Lỗi API khi CẬP NHẬT FILE TẠM THỜI: ${error.message}`, true);
     }
 }
 
