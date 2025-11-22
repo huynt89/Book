@@ -9,7 +9,7 @@ const COMIC_DATA_JSON = [
 		upload_date:  "2025-11-22",
 		description:  "Mèo máy Doraemon và Nobita",
 		cover:  "Test1.jpg"
-	},s
+	},
 	{
 		title:  "Truyện 7 Viên Ngọc Rồng",
 		folder:  "7vienngocrong",
@@ -32,3 +32,6 @@ const COMIC_DATA_JSON = [
 		cover:  "YugiOh_cover.jpg"
 	}
 ];
+
+
+//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
