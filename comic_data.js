@@ -66,6 +66,5 @@ const COMIC_DATA_JSON = [
 				"description": "Test5",
 				"cover": "img/Test5.jpg"
 		},
-];
     // Thêm các truyện khác vào đây
 ];
