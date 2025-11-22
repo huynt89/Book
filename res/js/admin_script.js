@@ -4,8 +4,11 @@
 const GITHUB_CONFIG = {
     // ⚠️ ĐIỀN CHÍNH XÁC THÔNG TIN REPO CỦA BẠN ⚠️
     OWNER: 'huynt89',
-    REPO: 'Book', // <-- Đảm bảo Tên Repo là CHÍNH XÁC
+    REPO: 'Book', 
     FILE_PATH: 'comic_data.js',
+    // URL RAW để đọc file (Tránh lỗi Cache/CORS)
+    RAW_CONTENT_URL: (owner, repo, path) => `https://raw.githubusercontent.com/${owner}/${repo}/main/${path}`,
+    // URL API để ghi file
     API_URL: (owner, repo, path) => `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
 };
 
@@ -19,39 +22,32 @@ const LOG = document.getElementById('log');
 document.addEventListener('DOMContentLoaded', initAdminApp);
 
 function initAdminApp() {
-    // 1. Tải danh sách truyện ngay lập tức (Read-only)
     loadComicDataAndPopulateList();
-    
-    // 2. Kích hoạt tất cả listeners
     setupMainListeners();
 
-    // ⚠️ Cập nhật hiển thị trạng thái ban đầu (như yêu cầu)
-    appendLog('Token được xử lý an toàn qua GitHub Actions.', false, true); 
     appendLog('Ứng dụng đã sẵn sàng.', false, true);
+    appendLog('Lưu ý: GitHub không lưu thư mục rỗng. Hệ thống sẽ tạo file .gitkeep để giữ thư mục.', false, true);
 }
 
 function setupMainListeners() {
     document.getElementById('comicSelector').addEventListener('change', handleComicSelect);
     document.getElementById('addNewBtn').addEventListener('click', clearForm);
     document.getElementById('saveComicBtn').addEventListener('click', updateComicData);
-
-
-
-
-
-
-
+    
+    // ✅ Nút mới: Tạo Thư mục Truyện
+    document.getElementById('createComicFolderBtn').addEventListener('click', createComicFolder); 
+    
+    // ✅ Nút mới: Tạo Thư mục Chapter
+    document.getElementById('createChapterFolderBtn').addEventListener('click', createChapterFolder);
+    
     document.getElementById('uploadCoverBtn').addEventListener('click', uploadCoverImage);
     document.getElementById('uploadChapterBtn').addEventListener('click', uploadChapterImages);
 }
-
-
 
 // ===============================================
 // CÁC HÀM HỖ TRỢ CHUNG
 // ===============================================
 
-// Sửa đổi hàm appendLog để thêm tùy chọn hiển thị ở đầu (prepend)
 function appendLog(message, isError = false, prepend = false) {
     const timestamp = new Date().toLocaleTimeString('vi-VN');
     const prefix = isError ? '❌ LỖI: ' : '✅ ';
@@ -64,35 +60,27 @@ function appendLog(message, isError = false, prepend = false) {
     }
 }
 
-
-
 function getHeaders() {
     return {
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json'
+        // Lưu ý: Nếu không có Authorization token ở đây,
+        // việc GHI (PUT) sẽ thất bại trừ khi bạn dùng GitHub Actions proxy
     };
 }
-
-
-
-
-
 
 function formatComicData(comicArray) {
     comicArray.sort((a, b) => a.title.localeCompare(b.title)); 
     return JSON.stringify(comicArray, null, 4);
-
-
-
 }
 
 // ===============================================
-// LOGIC TẢI DỮ LIỆU (READ) - SỬA LỖI 404
+// LOGIC TẢI DỮ LIỆU (READ)
 // ===============================================
 
 async function loadComicDataAndPopulateList() {
-    // 🛑 ĐÃ SỬA LỖI 404: Thêm GITHUB_CONFIG.REPO vào đường dẫn
-    const fileUrl = `${window.location.origin}/${GITHUB_CONFIG.REPO}/${GITHUB_CONFIG.FILE_PATH}`;
+    // Sử dụng RAW URL để đọc dữ liệu ổn định hơn
+    const fileUrl = GITHUB_CONFIG.RAW_CONTENT_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, GITHUB_CONFIG.FILE_PATH);
     const selector = document.getElementById('comicSelector');
     selector.innerHTML = '<option value="">-- Đang tải danh sách --</option>';
 
@@ -106,7 +94,13 @@ async function loadComicDataAndPopulateList() {
         const match = content.match(/const COMIC_DATA_JSON = (\[[\s\S]*?\]);/);
         if (!match) { throw new Error("Không tìm thấy mảng COMIC_DATA_JSON trong file."); }
         
-        eval(`currentComicData = ${match[1]}`); 
+        // Parse JSON an toàn hơn eval
+        try {
+            currentComicData = JSON.parse(match[1]);
+        } catch(e) {
+            eval(`currentComicData = ${match[1]}`); 
+        }
+        
         currentComicData.sort((a, b) => a.title.localeCompare(b.title));
 
         selector.innerHTML = '<option value="">-- Chọn Truyện --</option>';
@@ -117,21 +111,13 @@ async function loadComicDataAndPopulateList() {
             selector.appendChild(opt);
         });
 
-        appendLog(`Đã tải và hiển thị ${currentComicData.length} truyện trong danh sách.`, false);
-
-
-
+        appendLog(`Đã tải và hiển thị ${currentComicData.length} truyện.`, false);
 
     } catch (error) {
         selector.innerHTML = '<option value="">-- Lỗi tải truyện --</option>';
-        // Hiển thị lỗi ra Log
-        appendLog(`Lỗi tải dữ liệu truyện: ${error.message}. Vui lòng kiểm tra Console (F12) và đường dẫn file!`, true); 
-
-
-
+        appendLog(`Lỗi tải dữ liệu: ${error.message}.`, true); 
     }
 }
-
 
 function handleComicSelect(e) {
     const index = e.target.value;
@@ -144,7 +130,7 @@ function handleComicSelect(e) {
     document.getElementById('comicFolder').value = comic.folder;
     document.getElementById('comicDescription').value = comic.description;
     document.getElementById('comicCover').value = comic.cover;
-    appendLog(`Đã tải thông tin truyện "${comic.title}" vào form (CHỈNH SỬA).`);
+    appendLog(`Đang chỉnh sửa: "${comic.title}"`);
 }
 
 function clearForm() {
@@ -155,22 +141,110 @@ function clearForm() {
     document.getElementById('comicDescription').value = "";
     document.getElementById('comicCover').value = "";
     document.getElementById('chapterInput').value = "";
-    appendLog('Đã xóa form, sẵn sàng cho truyện mới (THÊM MỚI).');
-
-
-
-
-
-
+    appendLog('Đã xóa form. Nhập truyện mới.');
 }
 
 // ===============================================
-// LOGIC COMMIT (TẠO FILE TẠM) - WRITE
+// LOGIC GHI FILE (UPLOAD/UPDATE) - ĐÃ GỘP HÀM TRÙNG
+// ===============================================
+
+async function uploadFileToGithub(fullFilePath, base64Content, commitMessage) {
+    const apiUrl = GITHUB_CONFIG.API_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, fullFilePath);
+    
+    // 1. Kiểm tra xem file đã tồn tại chưa để lấy SHA (tránh lỗi 409 Conflict)
+    let sha = null;
+    try {
+        const getResponse = await fetch(apiUrl); 
+        if (getResponse.ok) {
+            const existingFile = await getResponse.json();
+            sha = existingFile.sha;
+        }
+    } catch (e) { /* File chưa tồn tại, bỏ qua */ }
+
+    // 2. Chuẩn bị dữ liệu commit
+    const commitData = {
+        message: commitMessage,
+        content: base64Content,
+        sha: sha // Nếu là file mới, sha sẽ là null, GitHub tự hiểu là tạo mới
+    };
+    
+    // 3. Gửi request PUT
+    const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: getHeaders(), 
+        body: JSON.stringify(commitData)
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Status ${response.status}: ${errorText}. Kiểm tra lại quyền Token.`);
+    }
+    
+    return response.json();
+}
+
+// ===============================================
+// ✅ TÍNH NĂNG MỚI: TẠO FOLDER
+// ===============================================
+
+// Hàm chung để tạo folder (bằng cách tạo file .gitkeep)
+async function createFolderGeneric(folderPath, successMessage) {
+    // GitHub không hỗ trợ folder rỗng, ta phải tạo 1 file bên trong nó.
+    // File .gitkeep là quy ước chung.
+    const dummyFilePath = `${folderPath}/.gitkeep`;
+    
+    // Nội dung file rỗng (đã mã hóa base64)
+    const content = btoa(" "); 
+
+    try {
+        await uploadFileToGithub(dummyFilePath, content, `feat: Create folder ${folderPath}`);
+        appendLog(successMessage, false);
+    } catch (error) {
+        // Nếu lỗi báo file đã tồn tại (SHA conflict), nghĩa là folder đã có
+        if (error.message.includes('sha') || error.message.includes('422')) {
+            appendLog(`Thư mục đã tồn tại: ${folderPath}`, false);
+        } else {
+            appendLog(`Lỗi tạo folder: ${error.message}`, true);
+        }
+    }
+}
+
+// 1. Tạo folder cho Truyện: Comic/[Tên Folder]
+async function createComicFolder() {
+    const folderName = document.getElementById('comicFolder').value.trim();
+    
+    if (!folderName) { 
+        appendLog('Vui lòng nhập "Tên Thư Mục Truyện" trước.', true); 
+        return; 
+    }
+
+    // Đường dẫn: Comic/TenTruyen
+    const path = `Comic/${folderName}`;
+    
+    appendLog(`Đang tạo thư mục truyện: ${path}...`);
+    await createFolderGeneric(path, `✅ Đã tạo xong thư mục truyện: ${folderName}`);
+}
+
+// 2. Tạo folder cho Chapter: Comic/[Tên Truyện]/[Tên Chapter]
+async function createChapterFolder() {
+    const comicFolder = document.getElementById('comicFolder').value.trim();
+    const chapterName = document.getElementById('chapterInput').value.trim();
+    
+    if (!comicFolder) { appendLog('Chưa có Tên Thư Mục Truyện.', true); return; }
+    if (!chapterName) { appendLog('Vui lòng nhập "Tên Chapter Mới".', true); return; }
+
+    // Đường dẫn: Comic/TenTruyen/Chap01
+    const path = `Comic/${comicFolder}/${chapterName}`;
+
+    appendLog(`Đang tạo thư mục chapter: ${path}...`);
+    await createFolderGeneric(path, `✅ Đã tạo xong thư mục chapter: ${chapterName}`);
+}
+
+// ===============================================
+// LOGIC CẬP NHẬT DATA & UPLOAD ẢNH
 // ===============================================
 
 async function updateComicData() {
-    
-    // 1. Thu thập dữ liệu và cập nhật mảng local (currentComicData)
     const title = document.getElementById('comicTitle').value.trim();
     const folder = document.getElementById('comicFolder').value.trim();
     const description = document.getElementById('comicDescription').value.trim();
@@ -199,78 +273,25 @@ async function updateComicData() {
         appendLog(`Đã thêm truyện mới "${title}".`);
         clearForm();
     } else {
-        appendLog(`Folder "${folder}" đã tồn tại. Vui lòng chọn truyện đó để chỉnh sửa.`, true);
+        appendLog(`Folder "${folder}" đã tồn tại. Đang chuyển sang chế độ chỉnh sửa.`, true);
         return;
     }
 
-    // 2. CHUẨN BỊ COMMIT VÀO FILE TẠM THỜI (temp_data.json)
     const fileContent = formatComicData(currentComicData); 
     const newContentBase64 = btoa(unescape(encodeURIComponent(fileContent)));
 
+    // Ghi vào temp_data.json để kích hoạt GitHub Actions
     const apiUrl = GITHUB_CONFIG.API_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, 'temp_data.json');
     
     try {
-        // Lấy SHA của file temp_data.json nếu nó tồn tại
-        let sha = null;
-        try {
-            // Tải SHA của file tạm thời (fetch công khai)
-            const getResponse = await fetch(apiUrl); 
-            if (getResponse.ok) {
-                const existingFile = await getResponse.json();
-                sha = existingFile.sha;
-            }
-        } catch (e) { /* file chưa tồn tại */ }
-
-        const commitData = {
-            message: `chore: Tạo file temp_data.json để kích hoạt Action (${title})`,
-            content: newContentBase64,
-            sha: sha
-        };
-        
-        // Gửi yêu cầu PUT để tạo/cập nhật file tạm thời (Tokenless)
-        const response = await fetch(apiUrl, {
-            method: 'PUT',
-            headers: getHeaders(), 
-            body: JSON.stringify(commitData)
-        });
-
-        if (!response.ok) { 
-            throw new Error(`Đẩy file tạm thời thất bại. Status: ${response.status}. Hãy kiểm tra quyền Write Access của GitHub Actions.`); 
-        }
-        
+        // Gọi hàm upload đã gộp
+        await uploadFileToGithub('temp_data.json', newContentBase64, `chore: Update data for ${title}`);
         appendLog(`\n🎉 Đã tạo/cập nhật file temp_data.json thành công!`, false);
-        appendLog(`Vui lòng chờ 10-20 giây để GitHub Actions tự động cập nhật comic_data.js.`, false);
+        appendLog(`Vui lòng chờ GitHub Actions xử lý.`, false);
         
     } catch (error) {
-        appendLog(`Lỗi API khi CẬP NHẬT FILE TẠM THỜI: ${error.message}`, true);
+        appendLog(`Lỗi API khi CẬP NHẬT FILE TẠM: ${error.message}`, true);
     }
-}
-
-// ===============================================
-// LOGIC UPLOAD FILE (WRITE)
-// ===============================================
-
-// Hàm hỗ trợ upload (Tokenless)
-async function uploadFileToGithub(fullFilePath, base64Content, commitMessage) {
-    const apiUrl = GITHUB_CONFIG.API_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, fullFilePath);
-    
-    const commitData = {
-        message: commitMessage,
-        content: base64Content,
-    };
-    
-    const response = await fetch(apiUrl, {
-        method: 'PUT',
-        headers: getHeaders(), 
-        body: JSON.stringify(commitData)
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Status ${response.status}: ${errorText}. Kiểm tra quyền Actions.`);
-    }
-    
-    return response.json();
 }
 
 async function uploadCoverImage() {
@@ -291,7 +312,7 @@ async function uploadCoverImage() {
 
         try {
             await uploadFileToGithub(fullFilePath, base64Content, `feat: Upload ảnh bìa: ${coverFileName}`);
-            appendLog(`Tải lên Ảnh Bìa thành công vào: ${fullFilePath}`, false);
+            appendLog(`Tải lên Ảnh Bìa thành công!`, false);
         } catch (error) {
             appendLog(`Lỗi tải lên Ảnh Bìa: ${error.message}`, true);
         }
@@ -305,7 +326,7 @@ async function uploadChapterImages() {
     const chapterName = document.getElementById('chapterInput').value.trim();
     const fileInput = document.getElementById('chapterFileInput');
 
-    if (!comicFolder) { appendLog('Vui lòng điền Tên Thư Mục (Folder) truyện.', true); return; }
+    if (!comicFolder) { appendLog('Vui lòng điền Tên Thư Mục Truyện.', true); return; }
     if (!chapterName) { appendLog('Vui lòng điền Tên Chapter Mới.', true); return; }
     if (fileInput.files.length === 0) { appendLog('Vui lòng chọn ít nhất một file ảnh chapter.', true); return; }
 
@@ -313,7 +334,7 @@ async function uploadChapterImages() {
     let successCount = 0;
     let failCount = 0;
     
-    appendLog(`Bắt đầu tải lên ${files.length} ảnh vào thư mục: Comic/${comicFolder}/${chapterName}/...`);
+    appendLog(`Bắt đầu tải lên ${files.length} ảnh vào: Comic/${comicFolder}/${chapterName}/...`);
 
     for (const file of files) {
         const reader = new FileReader();
@@ -324,12 +345,12 @@ async function uploadChapterImages() {
                 const base64Content = reader.result.split(',')[1];
                 
                 try {
-                    await uploadFileToGithub(fullFilePath, base64Content, `feat: Thêm ảnh ${file.name} vào chương ${chapterName}`);
+                    await uploadFileToGithub(fullFilePath, base64Content, `feat: Thêm ảnh ${file.name} vào ${chapterName}`);
                     appendLog(`Tải lên thành công: ${file.name}`);
                     successCount++;
                     resolve();
                 } catch (error) {
-                    appendLog(`Lỗi tải lên file ${file.name}: ${error.message}`, true);
+                    appendLog(`Lỗi tải file ${file.name}: ${error.message}`, true);
                     failCount++;
                     resolve();
                 }
@@ -340,6 +361,6 @@ async function uploadChapterImages() {
         await uploadPromise;
     }
 
-    appendLog(`\n--- KẾT QUẢ UPLOAD CHAPTER ---`, false);
-    appendLog(`Hoàn thành. ${successCount} file thành công, ${failCount} file thất bại.`, false);
+    appendLog(`\n--- KẾT QUẢ UPLOAD ---`, false);
+    appendLog(`Hoàn thành: ${successCount} thành công, ${failCount} thất bại.`, false);
 }
