@@ -8,7 +8,7 @@ const COMIC_DATA_JSON = [
 				"folder": "YugiOh",
 				"upload_date": "2025-11-16",
 				"description": "Vua Trò Chơi Yugi-Oh",
-				"cover": "/YugiOh_cover.jpg" // Đã thay đổi đường dẫn
+				"cover": "YugiOh_cover.jpg" // Đã thay đổi đường dẫn
 		},
 		
 		{
@@ -16,7 +16,7 @@ const COMIC_DATA_JSON = [
 				"folder": "Conan",
 				"upload_date": "2025-11-16",
 				"description": "Truyện trinh thám Conan",
-				"cover": "/Conan_cover.jpg" // Đã thay đổi đường dẫn
+				"cover": "Conan_cover.jpg" // Đã thay đổi đường dẫn
 		},
 		
 		{
@@ -24,7 +24,7 @@ const COMIC_DATA_JSON = [
 				"folder": "7vienngocrong",
 				"upload_date": "2025-11-16",
 				"description": "Truyện 7 viên ngọc rồng",
-				"cover": "/7vienngocrong_cover.jpg" // Đã thay đổi đường dẫn
+				"cover": "7vienngocrong_cover.jpg" // Đã thay đổi đường dẫn
 		},
 		
 				{
@@ -32,7 +32,7 @@ const COMIC_DATA_JSON = [
 				"folder": "Test1",
 				"upload_date": "2025-11-16",
 				"description": "Test1",
-				"cover": "/Test1.jpg"
+				"cover": "Test1.jpg"
 		},
 		
 		{
@@ -40,7 +40,7 @@ const COMIC_DATA_JSON = [
 				"folder": "Test2",
 				"upload_date": "2025-11-16",
 				"description": "Test2",
-				"cover": "/Test2.jpg"
+				"cover": "Test2.jpg"
 		},
 		
 		{
@@ -48,7 +48,7 @@ const COMIC_DATA_JSON = [
 				"folder": "Test3",
 				"upload_date": "2025-11-16",
 				"description": "Test3",
-				"cover": "/Test3.jpg"
+				"cover": "Test3.jpg"
 		},
 		
 		{
@@ -56,7 +56,7 @@ const COMIC_DATA_JSON = [
 				"folder": "Test4",
 				"upload_date": "2025-11-16",
 				"description": "Test4",
-				"cover": "/Test4.jpg"
+				"cover": "Test4.jpg"
 		},
 		
 		{
@@ -64,7 +64,7 @@ const COMIC_DATA_JSON = [
 				"folder": "Test5",
 				"upload_date": "2025-11-16",
 				"description": "Test5",
-				"cover": "/Test5.jpg"
+				"cover": "Test5.jpg"
 		},
     // Thêm các truyện khác vào đây
 ];
