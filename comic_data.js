@@ -32,6 +32,3 @@ const COMIC_DATA_JSON = [
 		cover:  "YugiOh_cover.jpg"
 	}
 ];
-
-
-//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
