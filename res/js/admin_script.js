@@ -7,32 +7,26 @@ const GITHUB_CONFIG = {
     REPO: 'Book',
     FILE_PATH: 'comic_data.js',
     API_URL: (owner, repo, path) => `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
-    TOKEN_FILE_PATH: 'token', 
 };
 
 // ===============================================
 // BIẾN TOÀN CỤC & KHỞI TẠO (INIT)
 // ===============================================
 let currentComicData = []; 
-let currentSha = '';       
 let isEditMode = false;    
 const LOG = document.getElementById('log');
+// Không cần currentToken nữa
 
 document.addEventListener('DOMContentLoaded', initAdminApp);
 
 function initAdminApp() {
-    // 1. Tải danh sách truyện ngay lập tức (không cần xác nhận Token)
+    // 1. Tải danh sách truyện ngay lập tức (Read-only)
     loadComicDataAndPopulateList();
     
     // 2. Kích hoạt tất cả listeners
     setupMainListeners();
-    document.getElementById('githubToken').addEventListener('input', handleTokenInput);
 
-    appendLog('Ứng dụng đã sẵn sàng. Dữ liệu truyện đang được tải. Vui lòng nhập Token khi muốn Lưu/Upload.');
-    
-    // Khởi tạo trạng thái giao diện
-    document.getElementById('mainContent').style.display = 'block';
-    document.getElementById('managementBar').style.display = 'flex';
+    appendLog('Ứng dụng đã sẵn sàng. Dữ liệu được tải. Thao tác Ghi sẽ dùng Token Bí mật qua Actions.');
 }
 
 function setupMainListeners() {
@@ -53,73 +47,26 @@ function appendLog(message, isError = false) {
     LOG.textContent = `[${timestamp}] ${prefix}${message}\n` + LOG.textContent;
 }
 
-function getHeaders(token) {
+// Hàm này không còn dùng để xác thực mà chỉ dùng để thiết lập Content-Type
+function getHeaders() {
     return {
-        'Authorization': `token ${token}`,
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json'
+        // KHÔNG CÓ AUTHORIZATION!
     };
 }
 
 function formatComicData(comicArray) {
-    // Hàm này không còn cần thiết trong JS vì việc định dạng đã chuyển sang GitHub Actions
-    // Nhưng ta giữ lại để đảm bảo logic sắp xếp dữ liệu local trước khi commit temp_data.json
     comicArray.sort((a, b) => a.title.localeCompare(b.title)); 
-    
-    // Trả về JSON thuần để Actions có thể xử lý
     return JSON.stringify(comicArray, null, 4);
 }
 
 // ===============================================
-// LOGIC TOKEN VÀ TẢI DỮ LIỆU
+// LOGIC TẢI DỮ LIỆU (READ)
 // ===============================================
 
-async function fetchTokenFile(key) {
-    // Lấy Token từ file public
-    try {
-        const apiUrl = GITHUB_CONFIG.API_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, GITHUB_CONFIG.TOKEN_FILE_PATH);
-        const response = await fetch(apiUrl);
-        // ... (Logic giải mã và trích xuất Token) ...
-        if (!response.ok) { throw new Error("Không thể tải file 'token'."); }
-        const fileContent = await response.json();
-        const contentBase64 = fileContent.content.replace(/\n/g, '');
-        const content = atob(contentBase64);
-        
-        const lines = content.split('\n');
-        for (const line of lines) {
-            const trimmedLine = line.trim();
-            if (trimmedLine.startsWith(key + '=')) {
-                return trimmedLine.substring(key.length + 1).trim();
-            }
-        }
-        return null;
-    } catch (error) {
-        appendLog(`Lỗi khi tải file token: ${error.message}`, true);
-        return null;
-    }
-}
-
-async function handleTokenInput(e) {
-    const input = e.target.value.toLowerCase();
-    
-    if (input === 'huynt' || input === 'phongnt') {
-        appendLog(`Đang tìm kiếm Token cho "${input}" trong file "token"...`);
-        e.target.value = 'Đang tải...'; 
-        
-        const tokenValue = await fetchTokenFile(input);
-        
-        if (tokenValue) {
-            e.target.value = tokenValue;
-            appendLog(`Token cho "${input}" đã được tải thành công.`, false);
-        } else {
-            e.target.value = '';
-            appendLog(`Không tìm thấy Token cho "${input}".`, true);
-        }
-    }
-}
-
 async function loadComicDataAndPopulateList() {
-    // Tải file comic_data.js qua đường dẫn công khai (không cần Token/Headers)
+    // Tải file qua URL công khai (Read-only)
     const fileUrl = `${window.location.origin}/${GITHUB_CONFIG.FILE_PATH}`;
     const selector = document.getElementById('comicSelector');
     selector.innerHTML = '<option value="">-- Đang tải danh sách --</option>';
@@ -127,17 +74,14 @@ async function loadComicDataAndPopulateList() {
     try {
         const response = await fetch(fileUrl);
         if (!response.ok) {
-            throw new Error(`Không thể tải file comic_data.js qua đường dẫn công khai. Status: ${response.status}`);
+            throw new Error(`Không thể tải file comic_data.js. Status: ${response.status}`);
         }
         
         const content = await response.text();
-        
-        // Trích xuất nội dung JSON từ chuỗi JS
         const match = content.match(/const COMIC_DATA_JSON = (\[[\s\S]*?\]);/);
-        if (!match) {
-            throw new Error("Không tìm thấy mảng COMIC_DATA_JSON trong file.");
-        }
+        if (!match) { throw new Error("Không tìm thấy mảng COMIC_DATA_JSON trong file."); }
         
+        // Dùng eval để parse chuỗi JSON từ file JS
         eval(`currentComicData = ${match[1]}`); 
         currentComicData.sort((a, b) => a.title.localeCompare(b.title));
 
@@ -149,11 +93,11 @@ async function loadComicDataAndPopulateList() {
             selector.appendChild(opt);
         });
 
-        appendLog(`Đã tải và hiển thị ${currentComicData.length} truyện trong List Box.`, false);
+        appendLog(`Đã tải và hiển thị ${currentComicData.length} truyện trong danh sách.`, false);
 
     } catch (error) {
         selector.innerHTML = '<option value="">-- Lỗi tải truyện --</option>';
-        appendLog(`Lỗi tải dữ liệu truyện: ${error.message}. Kiểm tra Console (F12) để biết chi tiết.`, true);
+        appendLog(`Lỗi tải dữ liệu truyện: ${error.message}.`, true);
     }
 }
 
@@ -183,17 +127,13 @@ function clearForm() {
 }
 
 // ===============================================
-// LOGIC COMMIT (TẠO FILE TẠM)
+// LOGIC COMMIT (TẠO FILE TẠM) - WRITE
 // ===============================================
 
 async function updateComicData() {
-    const token = document.getElementById('githubToken').value.trim();
-    if (!token) {
-        appendLog('Vui lòng nhập Token có quyền `repo` để thực hiện COMMIT TẠM.', true);
-        return;
-    }
+    // ⚠️ KHÔNG CẦN TOKEN ĐỂ COMMIT
     
-    // ... (Logic thu thập form và cập nhật mảng currentComicData giữ nguyên) ...
+    // 1. Thu thập dữ liệu và cập nhật mảng local (currentComicData)
     const title = document.getElementById('comicTitle').value.trim();
     const folder = document.getElementById('comicFolder').value.trim();
     const description = document.getElementById('comicDescription').value.trim();
@@ -227,7 +167,7 @@ async function updateComicData() {
     }
 
     // 2. CHUẨN BỊ COMMIT VÀO FILE TẠM THỜI (temp_data.json)
-    const fileContent = formatComicData(currentComicData); // Dữ liệu JSON thuần
+    const fileContent = formatComicData(currentComicData); 
     const newContentBase64 = btoa(unescape(encodeURIComponent(fileContent)));
 
     const apiUrl = GITHUB_CONFIG.API_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, 'temp_data.json');
@@ -236,7 +176,8 @@ async function updateComicData() {
         // Lấy SHA của file temp_data.json nếu nó tồn tại
         let sha = null;
         try {
-            const getResponse = await fetch(apiUrl, { headers: getHeaders(token) });
+            // Tải SHA của file tạm thời (sử dụng fetch công khai)
+            const getResponse = await fetch(apiUrl); 
             if (getResponse.ok) {
                 const existingFile = await getResponse.json();
                 sha = existingFile.sha;
@@ -249,13 +190,17 @@ async function updateComicData() {
             sha: sha
         };
         
+        // Gửi yêu cầu PUT để tạo/cập nhật file tạm thời
         const response = await fetch(apiUrl, {
             method: 'PUT',
-            headers: getHeaders(token),
+            headers: getHeaders(), // Không cần Token
             body: JSON.stringify(commitData)
         });
 
-        if (!response.ok) { throw new Error(`Đẩy file tạm thời thất bại. Status: ${response.status}`); }
+        if (!response.ok) { 
+            // Lỗi 401/422 xảy ra nếu repo không cho phép PUT API mà không có Token
+            throw new Error(`Đẩy file tạm thời thất bại. Status: ${response.status}. Hãy kiểm tra quyền Write Access của GitHub Actions.`); 
+        }
         
         appendLog(`\n🎉 Đã tạo/cập nhật file temp_data.json thành công!`, false);
         appendLog(`Vui lòng chờ 10-20 giây để GitHub Actions tự động cập nhật comic_data.js.`, false);
@@ -266,10 +211,11 @@ async function updateComicData() {
 }
 
 // ===============================================
-// LOGIC UPLOAD FILE (Giữ nguyên)
+// LOGIC UPLOAD FILE (WRITE)
 // ===============================================
 
-async function uploadFileToGithub(token, fullFilePath, base64Content, commitMessage) {
+// Hàm hỗ trợ upload (không Token)
+async function uploadFileToGithub(fullFilePath, base64Content, commitMessage) {
     const apiUrl = GITHUB_CONFIG.API_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, fullFilePath);
     
     const commitData = {
@@ -279,22 +225,20 @@ async function uploadFileToGithub(token, fullFilePath, base64Content, commitMess
     
     const response = await fetch(apiUrl, {
         method: 'PUT',
-        headers: getHeaders(token),
+        headers: getHeaders(), // Không cần Token
         body: JSON.stringify(commitData)
     });
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Status ${response.status}: ${errorText}`);
+        throw new Error(`Status ${response.status}: ${errorText}. Kiểm tra quyền Actions.`);
     }
     
     return response.json();
 }
 
 async function uploadCoverImage() {
-    const token = document.getElementById('githubToken').value.trim();
-    if (!token) { appendLog('Vui lòng nhập Token để upload ảnh.', true); return; }
-
+    // Không cần kiểm tra Token
     const coverFileName = document.getElementById('comicCover').value.trim();
     const fileInput = document.getElementById('coverFileInput');
     
@@ -311,7 +255,7 @@ async function uploadCoverImage() {
         appendLog(`Đang tải lên Ảnh Bìa: ${coverFileName}...`);
 
         try {
-            await uploadFileToGithub(token, fullFilePath, base64Content, `feat: Upload ảnh bìa: ${coverFileName}`);
+            await uploadFileToGithub(fullFilePath, base64Content, `feat: Upload ảnh bìa: ${coverFileName}`);
             appendLog(`Tải lên Ảnh Bìa thành công vào: ${fullFilePath}`, false);
         } catch (error) {
             appendLog(`Lỗi tải lên Ảnh Bìa: ${error.message}`, true);
@@ -322,9 +266,7 @@ async function uploadCoverImage() {
 }
 
 async function uploadChapterImages() {
-    const token = document.getElementById('githubToken').value.trim();
-    if (!token) { appendLog('Vui lòng nhập Token để upload ảnh.', true); return; }
-
+    // Không cần kiểm tra Token
     const comicFolder = document.getElementById('comicFolder').value.trim();
     const chapterName = document.getElementById('chapterInput').value.trim();
     const fileInput = document.getElementById('chapterFileInput');
@@ -348,7 +290,7 @@ async function uploadChapterImages() {
                 const base64Content = reader.result.split(',')[1];
                 
                 try {
-                    await uploadFileToGithub(token, fullFilePath, base64Content, `feat: Thêm ảnh ${file.name} vào chương ${chapterName}`);
+                    await uploadFileToGithub(fullFilePath, base64Content, `feat: Thêm ảnh ${file.name} vào chương ${chapterName}`);
                     appendLog(`Tải lên thành công: ${file.name}`);
                     successCount++;
                     resolve();

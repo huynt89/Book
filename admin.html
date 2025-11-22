@@ -39,31 +39,25 @@
         <div id="headerContent">
             <div id="titleGroup">
                 <h1 id="mainTitle">Quản Lý Dữ Liệu Truyện</h1>
-                <p id="subText">Cập nhật file comic_data.js thông qua GitHub Actions</p>
+                <p id="subText">Cập nhật file comic_data.js thông qua GitHub Actions (Token Bí mật)</p>
             </div>
         </div>
     </header>
 
     <main>
         <div id="adminContainer">
-            <h3 class="section-header">1. Cấu hình Truy cập (Dùng cho Ghi File Tạm & Upload Ảnh)</h3>
-            <div class="form-group">
-                <label for="githubToken">GitHub PAT Token (Gõ "huynt" hoặc "phongnt" để điền Token đã cấu hình):</label>
-                <input type="password" id="githubToken" placeholder="Dán token có quyền 'repo' để thực hiện thao tác Ghi/Upload">
-            </div>
-            
             <div id="managementBar">
-                <label for="comicSelector">2. Chọn Truyện (A-Z) để Chỉnh sửa:</label>
+                <label for="comicSelector">1. Chọn Truyện (A-Z) để Chỉnh sửa:</label>
                 <select id="comicSelector">
                     <option value="">-- Đang tải danh sách --</option>
                 </select>
                 <button id="addNewBtn" class="red">➕ Thêm mới</button>
             </div>
 
-            <div id="mainContent">
+            <div id="mainContent" style="display: block;">
                 <div id="twoColumnLayout">
                     <div class="column">
-                        <h3 class="section-header">3. Thông tin chi tiết</h3>
+                        <h3 class="section-header">2. Thông tin chi tiết</h3>
                         <div class="form-group">
                             <label for="comicTitle">Tiêu đề Truyện:</label>
                             <input type="text" id="comicTitle" required>
@@ -73,16 +67,16 @@
                             <input type="text" id="comicCover" placeholder="Ví dụ: Doraemon_cover.jpg" required>
                         </div>
                         
-                        <h3 class="section-header">4. Tải lên Ảnh Bìa</h3>
+                        <h3 class="section-header">3. Tải lên Ảnh Bìa</h3>
                         <div class="form-group">
                             <input type="file" id="coverFileInput" accept="image/*">
                             <button id="uploadCoverBtn">⬆️ Upload Ảnh Bìa</button>
-                            <p style="font-size: 0.9em; color: #555;">(Yêu cầu Token ở ô trên)</p>
+                            <p style="font-size: 0.9em; color: #555;">(Không cần Token)</p>
                         </div>
                     </div>
 
                     <div class="column">
-                        <h3 class="section-header">3. Chi tiết Truyện (tiếp)</h3>
+                        <h3 class="section-header">2. Chi tiết Truyện (tiếp)</h3>
                         <div class="form-group">
                             <label for="comicFolder">Tên Thư Mục (Folder):</label>
                             <input type="text" id="comicFolder" placeholder="PHẢI KHỚP với tên thư mục trên GitHub" required>
@@ -94,7 +88,7 @@
                         
                         <button id="saveComicBtn" style="width: 100%;">💾 Lưu thông tin và Kích hoạt Actions</button>
                         
-                        <h3 class="section-header">5. Tải lên Ảnh Chapter</h3>
+                        <h3 class="section-header">4. Tải lên Ảnh Chapter</h3>
                         <div class="form-group">
                             <label for="chapterInput">Tên Chapter Mới (Chỉ cần tên):</label>
                             <input type="text" id="chapterInput" placeholder="Ví dụ: Chap01">
@@ -104,7 +98,7 @@
                             <input type="file" id="chapterFileInput" multiple accept="image/*">
                             <button id="uploadChapterBtn">⬆️ Upload Ảnh Chapter</button>
                             <p style="font-size: 0.9em; color: #555; margin-top: 10px;">
-                                (Yêu cầu Token ở ô trên)
+                                (Không cần Token)
                             </p>
                         </div>
                     </div>
