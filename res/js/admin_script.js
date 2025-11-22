@@ -2,47 +2,75 @@
 // CẤU HÌNH GITHUB
 // =============================================== */
 const GITHUB_CONFIG = {
-    OWNER: 'huynt89',
-    REPO: 'Book',
+    // ⚠️ BẠN PHẢI ĐIỀN THÔNG TIN CHÍNH XÁC CỦA MÌNH VÀO ĐÂY ⚠️
+    OWNER: 'huynt89', // Ví dụ: 'ten_github_cua_ban'
+    REPO: 'Book',     // Ví dụ: 'ten_repo_chua_code'
     FILE_PATH: 'comic_data.js',
     API_URL: (owner, repo, path) => `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
-    TOKEN_FILE_PATH: 'token', 
+    TOKEN_FILE_PATH: 'token', // File chứa token cá nhân
 };
 
 // ===============================================
-// BIẾN TOÀN CỤC & INIT
+// BIẾN TOÀN CỤC & KHỞI TẠO (INIT)
 // ===============================================
-let currentComicData = [];
-let currentSha = '';
-let isEditMode = false;
-let currentToken = ''; // Biến lưu Token đã xác nhận
+let currentComicData = []; // Mảng chứa dữ liệu truyện hiện tại
+let currentSha = '';       // Mã SHA của file comic_data.js (cần cho việc cập nhật)
+let isEditMode = false;    // Chế độ chỉnh sửa (true) hay thêm mới (false)
+let currentToken = '';     // Token đã được xác nhận thành công
 const LOG = document.getElementById('log');
 
 document.addEventListener('DOMContentLoaded', initAdminApp);
 
 function initAdminApp() {
-    // Chỉ lắng nghe sự kiện nhập và nút xác nhận Token
+    // Chỉ lắng nghe sự kiện nhập và nút xác nhận Token ban đầu
     document.getElementById('githubToken').addEventListener('input', handleTokenInput);
     document.getElementById('confirmTokenBtn').addEventListener('click', confirmTokenAndLoadData);
-    
-    // Các listeners khác sẽ được kích hoạt sau khi Token thành công
     
     appendLog('Ứng dụng đã sẵn sàng. Vui lòng nhập Token và bấm Xác nhận.');
 }
 
-// ... (Các hàm appendLog, getHeaders, formatComicData giữ nguyên) ...
+// ===============================================
+// CÁC HÀM HỖ TRỢ CHUNG
+// ===============================================
+
+function appendLog(message, isError = false) {
+    const timestamp = new Date().toLocaleTimeString('vi-VN');
+    const prefix = isError ? '❌ LỖI: ' : '✅ ';
+    LOG.textContent = `[${timestamp}] ${prefix}${message}\n` + LOG.textContent;
+}
+
+function getHeaders(token) {
+    return {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+    };
+}
+
+/**
+ * Định dạng lại mảng JSON thành chuỗi JavaScript hợp lệ (sắp xếp theo Title A-Z)
+ */
+function formatComicData(comicArray) {
+    comicArray.sort((a, b) => a.title.localeCompare(b.title)); 
+    
+    const dataString = JSON.stringify(comicArray, null, 4)
+        .replace(/"([^"]+)":/g, '$1:')
+        .replace(/:/g, ': ')
+        .replace(/    /g, '\t');
+    
+    return `/* ================= CẤU HÌNH TRUYỆN ================= */\n\n// Lưu ý: Đường dẫn ảnh bìa đã được đổi thành thư mục 'cover/' \n// Bạn chỉ cần điền tên file ảnh ở đây (ví dụ: 'YugiOh_cover.jpg')\nconst COMIC_DATA_JSON = ${dataString};\n`;
+}
 
 // ===============================================
-// HÀM TẢI TOKEN VÀ XÁC NHẬN
+// LOGIC TOKEN VÀ XÁC NHẬN
 // ===============================================
 
 async function fetchTokenFile(key) {
-    // Logic tải Token từ file 'token' (giữ nguyên)
     try {
         const apiUrl = GITHUB_CONFIG.API_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, GITHUB_CONFIG.TOKEN_FILE_PATH);
         const response = await fetch(apiUrl);
         if (!response.ok) {
-            throw new Error("Không thể tải file 'token'.");
+            throw new Error("Không thể tải file 'token'. Kiểm tra tên file.");
         }
         
         const fileContent = await response.json();
@@ -74,7 +102,7 @@ async function handleTokenInput(e) {
         
         if (tokenValue) {
             e.target.value = tokenValue;
-            appendLog(`Token cho "${input}" đã được tải thành công. Vui lòng bấm Xác nhận Token.`);
+            appendLog(`Token cho "${input}" đã được tải thành công. Vui lòng bấm Xác nhận Token.`, false);
         } else {
             e.target.value = '';
             appendLog(`Không tìm thấy Token cho "${input}".`, true);
@@ -82,10 +110,6 @@ async function handleTokenInput(e) {
     }
 }
 
-
-/**
- * Hàm chính: Xác nhận Token và Tải dữ liệu
- */
 async function confirmTokenAndLoadData() {
     const token = document.getElementById('githubToken').value.trim();
     if (!token) {
@@ -93,51 +117,53 @@ async function confirmTokenAndLoadData() {
         return;
     }
     
-    // Đặt nút vào trạng thái loading
     const confirmBtn = document.getElementById('confirmTokenBtn');
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Đang xác nhận...';
     
     appendLog('Đang kiểm tra quyền truy cập GitHub...');
 
-    // 1. KIỂM TRA TOKEN BẰNG CÁCH TẢI THÔNG TIN REPO
     const repoApiUrl = `https://api.github.com/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}`;
 
     try {
+        const headers = getHeaders(token);
+        
+        // 1. Kiểm tra Token
         const response = await fetch(repoApiUrl, {
-            headers: getHeaders(token)
+            method: 'GET',
+            headers: headers
         });
 
         if (!response.ok) {
-            throw new Error(`Token không hợp lệ hoặc không có quyền truy cập. Status: ${response.status}`);
+            const errorBody = await response.text(); 
+            throw new Error(`Token không hợp lệ hoặc không có quyền truy cập. Status: ${response.status}. Chi tiết: ${errorBody.substring(0, 50)}...`);
         }
 
-        // 2. TOKEN HỢP LỆ, LƯU TOKEN VÀ TẢI DỮ LIỆU
+        // 2. TOKEN HỢP LỆ
         currentToken = token;
         appendLog('✅ Xác nhận Token thành công! Đang tải dữ liệu truyện...');
         
-        // Bắt đầu tải danh sách truyện và hiển thị giao diện
+        // 3. Tải danh sách truyện
         await loadComicDataAndPopulateList(); 
         
+        // 4. Hiển thị giao diện chính
         document.getElementById('managementBar').style.display = 'flex';
         document.getElementById('mainContent').style.display = 'block';
         
-        // Kích hoạt các listeners còn lại
         setupMainListeners();
+        document.getElementById('githubToken').disabled = true; // Khóa ô Token đã xác nhận
 
     } catch (error) {
         currentToken = '';
         appendLog(`❌ Lỗi Xác nhận Token: ${error.message}`, true);
         document.getElementById('githubToken').value = '';
+        document.getElementById('githubToken').disabled = false;
     } finally {
         confirmBtn.disabled = false;
         confirmBtn.textContent = '🔒 Xác nhận Token';
     }
 }
 
-/**
- * Kích hoạt các nút sau khi Token đã được xác nhận
- */
 function setupMainListeners() {
     document.getElementById('comicSelector').addEventListener('change', handleComicSelect);
     document.getElementById('addNewBtn').addEventListener('click', clearForm);
@@ -146,9 +172,8 @@ function setupMainListeners() {
     document.getElementById('uploadChapterBtn').addEventListener('click', uploadChapterImages);
 }
 
-
 // ===============================================
-// LOGIC TẢI DỮ LIỆU (ĐÃ SỬA ĐỂ DÙNG currentToken)
+// LOGIC TẢI DỮ LIỆU VÀ CHỈNH SỬA
 // ===============================================
 
 async function loadComicDataAndPopulateList() {
@@ -156,15 +181,13 @@ async function loadComicDataAndPopulateList() {
     const selector = document.getElementById('comicSelector');
     selector.innerHTML = '<option value="">-- Đang tải danh sách --</option>';
 
-    // Dùng currentToken để đảm bảo quyền truy cập vào file
     try {
+        // Sử dụng currentToken để tải file comic_data.js
         const response = await fetch(apiUrl, { 
             headers: getHeaders(currentToken) 
         });
 
         if (!response.ok) {
-            // Đây là lỗi khiến List Box không tải được trước đó. 
-            // Nó cần Token để truy cập API ngay cả với file công khai.
             throw new Error(`Không thể tải file comic_data.js. Status: ${response.status}`);
         }
         
@@ -190,16 +213,204 @@ async function loadComicDataAndPopulateList() {
             selector.appendChild(opt);
         });
 
-        appendLog(`Đã tải và hiển thị ${currentComicData.length} truyện trong List Box.`);
+        appendLog(`Đã tải và hiển thị ${currentComicData.length} truyện trong List Box.`, false);
 
     } catch (error) {
         selector.innerHTML = '<option value="">-- Lỗi tải truyện --</option>';
-        appendLog(`Lỗi tải dữ liệu truyện: ${error.message}. Vui lòng kiểm tra lại Token và quyền repo.`, true);
+        appendLog(`Lỗi tải dữ liệu truyện: ${error.message}. Kiểm tra quyền repo.`, true);
     }
 }
 
-// ... (Các hàm handleComicSelect, clearForm, updateComicData, uploadCoverImage, uploadChapterImages cần được cập nhật để sử dụng currentToken thay vì đọc từ input) ...
+function handleComicSelect(e) {
+    const index = e.target.value;
+    if (index === "") {
+        clearForm();
+        return;
+    }
+    
+    const comic = currentComicData[parseInt(index)];
+    
+    isEditMode = true;
+    document.getElementById('comicTitle').value = comic.title;
+    document.getElementById('comicFolder').value = comic.folder;
+    document.getElementById('comicDescription').value = comic.description;
+    document.getElementById('comicCover').value = comic.cover;
+    appendLog(`Đã tải thông tin truyện "${comic.title}" vào form (CHỈNH SỬA).`);
+}
 
-// **Cập nhật ngắn cho các hàm lưu/upload:**
-// Thay thế dòng `const token = document.getElementById('githubToken').value.trim();`
-// bằng `const token = currentToken;` ở đầu mỗi hàm (updateComicData, uploadCoverImage, uploadChapterImages).
+function clearForm() {
+    isEditMode = false;
+    document.getElementById('comicSelector').value = "";
+    document.getElementById('comicTitle').value = "";
+    document.getElementById('comicFolder').value = "";
+    document.getElementById('comicDescription').value = "";
+    document.getElementById('comicCover').value = "";
+    document.getElementById('chapterInput').value = "";
+    appendLog('Đã xóa form, sẵn sàng cho truyện mới (THÊM MỚI).');
+}
+
+async function updateComicData() {
+    const token = currentToken; // Sử dụng Token đã xác nhận
+    if (!token) { appendLog('Token chưa được xác nhận.', true); return; }
+
+    const title = document.getElementById('comicTitle').value.trim();
+    const folder = document.getElementById('comicFolder').value.trim();
+    const description = document.getElementById('comicDescription').value.trim();
+    const cover = document.getElementById('comicCover').value.trim();
+
+    if (!title || !folder || !description || !cover) {
+        appendLog('Vui lòng điền đầy đủ thông tin truyện.', true);
+        return;
+    }
+
+    const newComic = {
+        title,
+        folder,
+        upload_date: isEditMode ? currentComicData.find(c => c.folder === folder)?.upload_date || new Date().toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        description,
+        cover
+    };
+
+    const isExistingIndex = currentComicData.findIndex(c => c.folder === folder);
+    
+    if (isEditMode && isExistingIndex !== -1) {
+        currentComicData[isExistingIndex] = newComic;
+        appendLog(`Đã cập nhật thông tin truyện "${title}".`);
+    } else if (isExistingIndex === -1) {
+        currentComicData.push(newComic);
+        appendLog(`Đã thêm truyện mới "${title}".`);
+        clearForm();
+    } else {
+        appendLog(`Folder "${folder}" đã tồn tại. Vui lòng chọn truyện đó để chỉnh sửa.`, true);
+        return;
+    }
+
+    try {
+        const apiUrl = GITHUB_CONFIG.API_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, GITHUB_CONFIG.FILE_PATH);
+        const newContentString = formatComicData(currentComicData);
+        const newContentBase64 = btoa(unescape(encodeURIComponent(newContentString))); 
+
+        const commitData = {
+            message: `feat: Cập nhật comic_data.js (${isEditMode ? 'Chỉnh sửa' : 'Thêm mới'}: ${title})`,
+            content: newContentBase64,
+            sha: currentSha 
+        };
+        
+        const response = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: getHeaders(token),
+            body: JSON.stringify(commitData)
+        });
+
+        if (!response.ok) { throw new Error(`Đẩy file thất bại. Status: ${response.status}`); }
+        
+        await loadComicDataAndPopulateList(); 
+        appendLog(`\n🎉 Cập nhật file comic_data.js thành công!`, false);
+
+    } catch (error) {
+        appendLog(`Lỗi API khi CẬP NHẬT JSON: ${error.message}`, true);
+    }
+}
+
+// ===============================================
+// LOGIC UPLOAD FILE
+// ===============================================
+
+async function uploadFileToGithub(token, fullFilePath, base64Content, commitMessage) {
+    const apiUrl = GITHUB_CONFIG.API_URL(GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, fullFilePath);
+    
+    const commitData = {
+        message: commitMessage,
+        content: base64Content,
+    };
+    
+    const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: getHeaders(token),
+        body: JSON.stringify(commitData)
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Status ${response.status}: ${errorText}`);
+    }
+    
+    return response.json();
+}
+
+async function uploadCoverImage() {
+    const token = currentToken;
+    if (!token) { appendLog('Token chưa được xác nhận.', true); return; }
+
+    const coverFileName = document.getElementById('comicCover').value.trim();
+    const fileInput = document.getElementById('coverFileInput');
+    
+    if (!coverFileName) { appendLog('Vui lòng điền Tên File Ảnh Bìa.', true); return; }
+    if (fileInput.files.length === 0) { appendLog('Vui lòng chọn một file ảnh bìa.', true); return; }
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+
+    reader.onload = async function() {
+        const base64Content = reader.result.split(',')[1];
+        const fullFilePath = `cover/${coverFileName}`; 
+        
+        appendLog(`Đang tải lên Ảnh Bìa: ${coverFileName}...`);
+
+        try {
+            await uploadFileToGithub(token, fullFilePath, base64Content, `feat: Upload ảnh bìa: ${coverFileName}`);
+            appendLog(`Tải lên Ảnh Bìa thành công vào: ${fullFilePath}`, false);
+        } catch (error) {
+            appendLog(`Lỗi tải lên Ảnh Bìa: ${error.message}`, true);
+        }
+    };
+
+    reader.readAsDataURL(file);
+}
+
+async function uploadChapterImages() {
+    const token = currentToken;
+    if (!token) { appendLog('Token chưa được xác nhận.', true); return; }
+
+    const comicFolder = document.getElementById('comicFolder').value.trim();
+    const chapterName = document.getElementById('chapterInput').value.trim();
+    const fileInput = document.getElementById('chapterFileInput');
+
+    if (!comicFolder) { appendLog('Vui lòng điền Tên Thư Mục (Folder) truyện.', true); return; }
+    if (!chapterName) { appendLog('Vui lòng điền Tên Chapter Mới.', true); return; }
+    if (fileInput.files.length === 0) { appendLog('Vui lòng chọn ít nhất một file ảnh chapter.', true); return; }
+
+    const files = Array.from(fileInput.files).sort((a, b) => a.name.localeCompare(b.name));
+    let successCount = 0;
+    let failCount = 0;
+    
+    appendLog(`Bắt đầu tải lên ${files.length} ảnh vào thư mục: Comic/${comicFolder}/${chapterName}/...`);
+
+    for (const file of files) {
+        const reader = new FileReader();
+        const fullFilePath = `Comic/${comicFolder}/${chapterName}/${file.name}`;
+
+        const uploadPromise = new Promise((resolve) => {
+            reader.onload = async function() {
+                const base64Content = reader.result.split(',')[1];
+                
+                try {
+                    await uploadFileToGithub(token, fullFilePath, base64Content, `feat: Thêm ảnh ${file.name} vào chương ${chapterName}`);
+                    appendLog(`Tải lên thành công: ${file.name}`);
+                    successCount++;
+                    resolve();
+                } catch (error) {
+                    appendLog(`Lỗi tải lên file ${file.name}: ${error.message}`, true);
+                    failCount++;
+                    resolve();
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        await uploadPromise;
+    }
+
+    appendLog(`\n--- KẾT QUẢ UPLOAD CHAPTER ---`, false);
+    appendLog(`Hoàn thành. ${successCount} file thành công, ${failCount} file thất bại.`, false);
+}
