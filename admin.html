@@ -4,16 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚙️ Quản Lý Truyện Tranh (Admin)</title>
-    <link rel="stylesheet" href="res/css/style.css"> <style>
+    <link rel="stylesheet" href="res/css/style.css"> 
+    <style>
         /* CSS bổ sung cho trang Admin */
         #adminContainer { max-width: 800px; margin: 30px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .form-group input:not([type="file"]), .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         #log { margin-top: 20px; padding: 10px; background: #eee; border: 1px solid #ddd; height: 150px; overflow-y: scroll; white-space: pre-wrap; font-family: monospace; font-size: 12px; }
-        button { padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button { padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;}
+        button.red { background: #e74c3c; }
         button:hover { background: #2980b9; }
         .section-header { margin-top: 30px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        
+        #managementBar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
+        #managementBar select { padding: 8px; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -28,30 +33,58 @@
 
     <main>
         <div id="adminContainer">
+            <h3 class="section-header">1. Cấu hình Truy cập</h3>
             <div class="form-group">
-                <label for="githubToken">1. GitHub PAT Token (Chỉ có quyền 'repo'):</label>
+                <label for="githubToken">GitHub PAT Token (Gõ "huynt" hoặc "token" để điền Token đã cấu hình sẵn):</label>
                 <input type="password" id="githubToken" placeholder="Dán token của bạn vào đây">
             </div>
+
+            <h3 class="section-header">2. Chọn hoặc Thêm Truyện</h3>
+            <div id="managementBar">
+                <label for="comicSelector">Chọn Truyện (A-Z) để Chỉnh sửa:</label>
+                <select id="comicSelector">
+                    <option value="">-- Đang tải danh sách --</option>
+                </select>
+                <button id="addNewBtn" class="red">➕ Thêm mới</button>
+            </div>
             
-            <h3 class="section-header">2. Thêm Truyện Mới</h3>
+            <h3 class="section-header">3. Thông tin Truyện (Chỉnh sửa/Thêm mới)</h3>
             <div class="form-group">
                 <label for="comicTitle">Tiêu đề Truyện:</label>
-                <input type="text" id="comicTitle" placeholder="Ví dụ: Doraemon" required>
+                <input type="text" id="comicTitle" required>
             </div>
             <div class="form-group">
                 <label for="comicFolder">Tên Thư Mục (Folder):</label>
-                <input type="text" id="comicFolder" placeholder="Ví dụ: Doraemon (PHẢI KHỚP với tên thư mục trên GitHub)" required>
+                <input type="text" id="comicFolder" placeholder="PHẢI KHỚP với tên thư mục trên GitHub (Ví dụ: Doraemon)" required>
             </div>
             <div class="form-group">
                 <label for="comicDescription">Mô tả:</label>
-                <input type="text" id="comicDescription" placeholder="Ví dụ: Mèo máy Doraemon và Nobita" required>
+                <input type="text" id="comicDescription" required>
             </div>
             <div class="form-group">
                 <label for="comicCover">Tên File Ảnh Bìa (trong thư mục cover/):</label>
                 <input type="text" id="comicCover" placeholder="Ví dụ: Doraemon_cover.jpg" required>
             </div>
             
-            <button id="addComicBtn">➕ Thêm và Cập nhật file comic_data.js</button>
+            <button id="saveComicBtn">💾 Lưu thông tin và Cập nhật comic_data.js</button>
+            
+            <h3 class="section-header">4. Tải lên File (Tùy chọn)</h3>
+            
+            <div class="form-group">
+                <label>Tải lên Ảnh Bìa (Cover Image):</label>
+                <input type="file" id="coverFileInput" accept="image/*">
+                <button id="uploadCoverBtn">⬆️ Upload Ảnh Bìa</button>
+                <p style="font-size: 0.9em; color: #555;">(Ảnh sẽ được lưu vào thư mục **cover/** với tên file lấy từ ô trên.)</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="chapterInput">Chọn Tên Chapter Mới (Chỉ cần tên):</label>
+                <input type="text" id="chapterInput" placeholder="Ví dụ: Chap01 (Nếu chưa tồn tại, nó sẽ được tạo)">
+                <label>Tải lên Ảnh Chapter (Nhiều file):</label>
+                <input type="file" id="chapterFileInput" multiple accept="image/*">
+                <button id="uploadChapterBtn">⬆️ Upload Ảnh Chapter</button>
+                <p style="font-size: 0.9em; color: #555;">(Ảnh sẽ được lưu vào thư mục **Comic/[Tên Truyện]/[Tên Chapter Mới]**.)</p>
+            </div>
 
             <h3 class="section-header">Log (Trạng thái)</h3>
             <pre id="log">Chưa có hoạt động nào...</pre>
