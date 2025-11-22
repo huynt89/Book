@@ -6,7 +6,7 @@
     <title>⚙️ Quản Lý Truyện Tranh (Admin)</title>
     <link rel="stylesheet" href="res/css/style.css"> 
     <style>
-        /* CSS bổ sung cho trang Admin */
+        /* CSS BỔ SUNG */
         #adminContainer { max-width: 900px; margin: 30px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
@@ -20,10 +20,9 @@
         #managementBar { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
         #managementBar select { padding: 8px; border-radius: 4px; }
 
-        /* BỐ CỤC 2 CỘT MỚI */
         #twoColumnLayout {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* Hai cột bằng nhau */
+            grid-template-columns: 1fr 1fr;
             gap: 30px;
         }
         .column {
@@ -33,6 +32,9 @@
         .column:last-child {
             border-right: none;
         }
+
+        /* ẨN TẤT CẢ NỘI DUNG CHÍNH BAN ĐẦU */
+        #mainContent, #managementBar { display: none; }
     </style>
 </head>
 <body>
@@ -47,6 +49,15 @@
 
     <main>
         <div id="adminContainer">
+            <h3 class="section-header">1. Cấu hình Truy cập</h3>
+            <div class="form-group" style="display: flex; align-items: flex-end; gap: 10px;">
+                <div style="flex-grow: 1;">
+                    <label for="githubToken">GitHub PAT Token (Gõ "huynt" hoặc "phongnt"):</label>
+                    <input type="password" id="githubToken" placeholder="Dán token hoặc gõ tên tài khoản">
+                </div>
+                <button id="confirmTokenBtn" style="min-width: 150px; height: 44px; margin-bottom: 0;">🔒 Xác nhận Token</button>
+            </div>
+            
             <div id="managementBar">
                 <label for="comicSelector">2. Chọn Truyện (A-Z) để Chỉnh sửa:</label>
                 <select id="comicSelector">
@@ -54,58 +65,54 @@
                 </select>
                 <button id="addNewBtn" class="red">➕ Thêm mới</button>
             </div>
-            
-            <div id="twoColumnLayout">
-                <div class="column">
-                    <h3 class="section-header">1. Cấu hình Truy cập</h3>
-                    <div class="form-group">
-                        <label for="githubToken">GitHub PAT Token (Gõ "huynt" hoặc "phongnt"):</label>
-                        <input type="password" id="githubToken" placeholder="Dán token hoặc gõ tên tài khoản">
-                    </div>
-                    
-                    <h3 class="section-header">3. Thông tin chi tiết</h3>
-                    <div class="form-group">
-                        <label for="comicTitle">Tiêu đề Truyện:</label>
-                        <input type="text" id="comicTitle" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="comicCover">Tên File Ảnh Bìa (trong thư mục cover/):</label>
-                        <input type="text" id="comicCover" placeholder="Ví dụ: Doraemon_cover.jpg" required>
-                    </div>
-                    
-                    <h3 class="section-header">4. Tải lên Ảnh Bìa</h3>
-                    <div class="form-group">
-                        <input type="file" id="coverFileInput" accept="image/*">
-                        <button id="uploadCoverBtn">⬆️ Upload Ảnh Bìa</button>
-                        <p style="font-size: 0.9em; color: #555;">(Ảnh sẽ được lưu vào thư mục **cover/** với tên file lấy từ ô trên.)</p>
-                    </div>
-                </div>
 
-                <div class="column">
-                    <h3 class="section-header">3. Chi tiết Truyện (tiếp)</h3>
-                    <div class="form-group">
-                        <label for="comicFolder">Tên Thư Mục (Folder):</label>
-                        <input type="text" id="comicFolder" placeholder="PHẢI KHỚP với tên thư mục trên GitHub" required>
+            <div id="mainContent">
+                <div id="twoColumnLayout">
+                    <div class="column">
+                        <h3 class="section-header">3. Thông tin chi tiết</h3>
+                        <div class="form-group">
+                            <label for="comicTitle">Tiêu đề Truyện:</label>
+                            <input type="text" id="comicTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="comicCover">Tên File Ảnh Bìa (trong thư mục cover/):</label>
+                            <input type="text" id="comicCover" placeholder="Ví dụ: Doraemon_cover.jpg" required>
+                        </div>
+                        
+                        <h3 class="section-header">4. Tải lên Ảnh Bìa</h3>
+                        <div class="form-group">
+                            <input type="file" id="coverFileInput" accept="image/*">
+                            <button id="uploadCoverBtn">⬆️ Upload Ảnh Bìa</button>
+                            <p style="font-size: 0.9em; color: #555;">(Ảnh sẽ được lưu vào thư mục **cover/**.)</p>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="comicDescription">Mô tả:</label>
-                        <input type="text" id="comicDescription" required>
-                    </div>
-                    
-                    <button id="saveComicBtn" style="width: 100%;">💾 Lưu thông tin và Cập nhật comic_data.js</button>
-                    
-                    <h3 class="section-header">5. Tải lên Ảnh Chapter</h3>
-                    <div class="form-group">
-                        <label for="chapterInput">Tên Chapter Mới (Chỉ cần tên):</label>
-                        <input type="text" id="chapterInput" placeholder="Ví dụ: Chap01 (Nếu chưa tồn tại, nó sẽ được tạo)">
-                    </div>
-                    <div class="form-group">
-                        <label>Chọn Ảnh Chapter (Nhiều file):</label>
-                        <input type="file" id="chapterFileInput" multiple accept="image/*">
-                        <button id="uploadChapterBtn">⬆️ Upload Ảnh Chapter</button>
-                        <p style="font-size: 0.9em; color: #555; margin-top: 10px;">
-                            **Lưu ý:** Tải lên thư mục/file RAR **không được hỗ trợ** trên web. Vui lòng chọn *tất cả* các file ảnh (JPEG/PNG) trong Chapter.
-                        </p>
+
+                    <div class="column">
+                        <h3 class="section-header">3. Chi tiết Truyện (tiếp)</h3>
+                        <div class="form-group">
+                            <label for="comicFolder">Tên Thư Mục (Folder):</label>
+                            <input type="text" id="comicFolder" placeholder="PHẢI KHỚP với tên thư mục trên GitHub" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="comicDescription">Mô tả:</label>
+                            <input type="text" id="comicDescription" required>
+                        </div>
+                        
+                        <button id="saveComicBtn" style="width: 100%;">💾 Lưu thông tin và Cập nhật comic_data.js</button>
+                        
+                        <h3 class="section-header">5. Tải lên Ảnh Chapter</h3>
+                        <div class="form-group">
+                            <label for="chapterInput">Tên Chapter Mới (Chỉ cần tên):</label>
+                            <input type="text" id="chapterInput" placeholder="Ví dụ: Chap01">
+                        </div>
+                        <div class="form-group">
+                            <label>Chọn Ảnh Chapter (Nhiều file):</label>
+                            <input type="file" id="chapterFileInput" multiple accept="image/*">
+                            <button id="uploadChapterBtn">⬆️ Upload Ảnh Chapter</button>
+                            <p style="font-size: 0.9em; color: #555; margin-top: 10px;">
+                                **Lưu ý:** Vui lòng chọn *tất cả* các file ảnh (JPEG/PNG) trong Chapter.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
