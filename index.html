@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Truyện Tranh Online</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>📚 Kho Truyện Tranh Của Tôi</title>
     <style>
-        body { font-family: 'Arial', sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin:0; padding:0; background:#f4f4f9; color:#333; }
         
-        /* Cập nhật Header để chứa Controls */
+        /* ================= HEADER VÀ CĂN CHỈNH ================= */
         header { 
             background:#3498db; 
             color:#fff; 
-            padding:20px; 
+            padding:15px 20px; /* HEADER NHỎ HƠN */
             box-shadow:0 2px 4px rgba(0,0,0,.1); 
             position:relative; 
         }
@@ -20,72 +20,48 @@
             max-width: 1200px;
             margin: 0 auto;
             display: flex;
-            justify-content: space-between; /* Đẩy hai nhóm nội dung ra hai bên */
-            align-items: center; /* Căn giữa theo chiều dọc */
-            text-align: left;
+            justify-content: center; /* Căn giữa tiêu đề */
+            align-items: center; 
+            text-align: center;
         }
 
         #titleGroup h1 { 
             margin:0; 
-            font-size: 2.2em;
+            font-size: 1.8em; 
         }
         #titleGroup #subText {
-            margin: 5px 0 0 0;
-            font-size: 1.1em;
+            margin: 0; 
+            font-size: 0.9em; 
             opacity: 0.9;
         }
-        
-        /* Controls (Nút Tải) bên phải Header */
-        #headerControls {
-            display: flex;
-            flex-direction: column; 
-            align-items: flex-end; /* Căn phải nút và status */
-            min-width: 150px; 
+
+        /* Ẩn hoàn toàn nút Tải DS Truyện cũ và trạng thái */
+        #controls {
+            display: none !important;
         }
 
-        #loadComicsBtn { 
-            background:#2ecc71; 
-            color:#fff; 
-            padding:8px 12px; 
-            border:none; 
-            border-radius:5px; 
-            cursor:pointer; 
-            font-size:14px; 
-            transition:background .2s; 
-            margin-bottom: 5px; 
-        }
-        #loadComicsBtn:hover {
-            background: #27ae60;
-        }
-        
-        #status { 
-            margin: 0; 
-            font-style:italic; 
-            color:#fff; 
-            font-size: 0.9em;
-        }
-
-        main { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
-        
         /* Nút Quay Lại */
-        .back-link {
-            position: absolute;
-            top: 10px;
-            left: 20px;
-            color: #fff;
-            text-decoration: none;
-            font-size: 1em;
+        .back-link { 
+            position:absolute; 
+            left:20px; 
+            top:15px; 
+            color:#fff; 
+            text-decoration:none; 
+            font-weight:bold; 
+            font-size:1em;
             padding: 5px 10px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            z-index: 10;
         }
         .back-link:hover {
-            background: rgba(0, 0, 0, 0.4);
+             background: rgba(0, 0, 0, 0.3);
         }
 
-        /* Comic List Grid */
+        main { max-width:1200px; margin:20px auto; padding:0 20px; }
+        
+        /* ================= DANH SÁCH TRUYỆN ================= */
         h2 { border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-top: 30px; }
-
         #comicsContainer { 
             display:grid; 
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
@@ -118,7 +94,7 @@
             border-radius: 5px;
             margin-bottom: 8px;
             display: block;
-            box-shadow: 0 0 5px rgba(0,0,0,.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,.1);
         }
         .comic-item h3 { 
             color:#3498db; 
@@ -131,144 +107,105 @@
             margin-bottom: 0;
         }
 
+        /* ================= KHUNG XEM TRUYỆN ================= */
+        .chapter-controls-wrapper {
+            position: sticky; top: 0; z-index: 1000; 
+            background: #fff; border-bottom: 1px solid #ddd;
+            padding: 10px 0; box-shadow: 0 2px 5px rgba(0,0,0,.1);
+        }
+        .chapter-controls { display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; }
+        .chapter-controls select { padding:8px 10px; font-size:14px; border-radius:6px; border:1px solid #ccc; }
+        .chapter-controls button { padding:8px 12px; border-radius:6px; border:none; cursor:pointer; color:#fff; background:#2b78c8; }
+        
+        #viewerContainer { text-align:center; padding:20px 0; margin-top: 0; background: #ecf0f1; border-radius: 8px; }
+        .comic-page-container { margin: 10px 0; display: inline-block; max-width: 100%; }
+        .comic-page { max-width:100%; height:auto; display:block; margin:0 auto 10px auto; border:1px solid #ddd; box-shadow:0 4px 8px rgba(0,0,0,.1); }
+        .error-icon { color:#c0392b; font-weight: bold; margin-top: 5px; display: block; text-align: center; }
 
-        /* Viewer Controls */
-        #viewerControls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            padding: 15px;
-            background: #fff;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,.05);
-        }
-        #chapterSelect {
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            min-width: 120px;
-        }
-        #reloadBtn {
-            background: #3498db;
-            color: #fff;
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background .2s;
-        }
-        #reloadBtn:hover {
-            background: #2980b9;
-        }
-
-        /* Comic Viewer */
-        #viewerContainer {
-            text-align: center;
-            background: #ecf0f1;
-            padding: 10px;
-            border-radius: 8px;
-        }
-        .comic-page-container {
-            margin: 10px 0;
-            display: inline-block; /* Quan trọng để căn giữa ảnh */
-            max-width: 100%;
-        }
-        .comic-page {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-            border: 1px solid #ddd;
-            box-shadow: 0 0 10px rgba(0,0,0,.1);
-        }
-        .error-icon {
-            color: #c0392b; 
-            font-weight: bold; 
-            margin-top: 5px; 
-            display: block;
-            text-align: center;
-        }
+        footer { text-align:center; padding:10px; background:#ecf0f1; color:#777; margin-top:30px; border-top:1px solid #ddd; }
     </style>
 </head>
 <body>
-
-<header>
-    <a href="index.html" id="backLink" style="display:none;" class="back-link">&larr; Quay lại Danh sách</a>
-    <div id="headerContent">
-        <div id="titleGroup">
-            <h1 id="mainTitle">Truyện Tranh Online</h1>
-				    <p id="subText">Kho lưu trữ truyện tranh cá nhân trên GitHub</p>
-        </div>
-        <div id="headerControls" style="display:none;">
+    <header>
+        <a href="index.html" id="backLink" style="display:none;" class="back-link">
+            &larr; Quay lại Danh sách
+        </a>
+        
+        <div id="headerContent">
+            <div id="titleGroup">
+                <h1 id="mainTitle">Truyện Tranh Online</h1>
+                <p id="subText">Kho lưu trữ truyện tranh cá nhân trên GitHub</p>
             </div>
-    </div>
-</header>
-
-<main>
-    <div id="controls" style="display: none;"> 
-        		</div>
-
-    <div id="comicList">
-        <h2>Danh Sách Truyện</h2>
-        <div id="comicsContainer">
             </div>
-    </div>
+    </header>
 
-    <div id="comicViewer" style="display:none;">
-        <div id="viewerControls">
-            <label for="chapterSelect">Chọn Chap:</label>
-            <select id="chapterSelect"></select>
-            <button id="reloadBtn">Reload Images</button>
-            <span id="apiStatus" style="color: #c0392b;"></span>
-        </div>
-        <div id="viewerContainer">
+    <main>
+        <div id="controls" style="display: none;"></div> 
+
+        <section id="comicList">
+            <h2>Danh Sách Truyện</h2>
+            <div id="comicsContainer">
+                <p>Đang tải danh sách truyện...</p>
             </div>
-    </div>
-</main>
+        </section>
+        
+        <section id="comicViewer" style="display:none;">
+            <div class="chapter-controls-wrapper"> 
+                <div class="chapter-controls" id="chapterControls">
+                    <label for="chapterSelect">Chọn Chap:</label>
+                    <select id="chapterSelect"></select>
+                    <button id="loadChapterBtn" style="display:none;" class="green">Load Chapter</button> 
+                    <button id="reloadBtn">Reload Images</button>
+                </div>
+                <div id="apiStatus" style="text-align: center; font-size: 0.9em; color: #e67e22; margin-top:5px;"></div>
+            </div>
+            
+            <div id="viewerContainer"></div>
+        </section>
+    </main>
+
+    <footer><p>&copy; 2025 Web Truyện GitHub</p></footer>
 
 <script>
 /* ================= CẤU HÌNH ================= */
 const GITHUB_CONFIG = {
 		OWNER: 'huynt89',
-		REPO: 'Book',				
-		ROOT_DIR: '',				
-		COMIC_DIR: 'Comic'		
+		REPO: 'Book',
+		ROOT_DIR: '',
+		COMIC_DIR: 'Comic'
 };
 
-// ⭐️ CẬP NHẬT: Thêm trường "cover" và thư mục "img/"
 const COMIC_DATA_JSON = [
 		{
 				"title": "Truyện Yugi-Oh",
-				"folder": "YugiOh",	
+				"folder": "YugiOh",
 				"upload_date": "2025-11-16",
 				"description": "Vua Trò Chơi Yugi-Oh",
-				"cover": "img/YugiOh_cover.jpg" 
+				"cover": "img/YugiOh_cover.jpg"
 		},
-    {
-				"title": "Thám Tử Lừng Danh Conan",
-				"folder": "Conan",	
-				"upload_date": "2025-11-16",
-				"description": "Bản sưu tập 100 tập truyện",
-				"cover": "img/Conan_cover.jpg" 
-		},
+		
 		{
-				"title": "7 Viên Ngọc Rồng",
-				"folder": "7vienngocrong",	
+				"title": "Truyện Conan",
+				"folder": "Conan",
 				"upload_date": "2025-11-16",
-				"description": "Full truyện 7 viên ngọc rồng",
-				"cover": "img/7vienngocrong_cover.jpg" 
-		}
-    // Thêm các truyện khác nếu cần
+				"description": "Truyện trinh thám Conan",
+				"cover": "img/Conan_cover.jpg"
+		},
+		
+		{
+				"title": "Truyện 7 Viên Ngọc Rồng",
+				"folder": "7vienngocrong",
+				"upload_date": "2025-11-16",
+				"description": "Truyện 7 viên ngọc rồng",
+				"cover": "img/7vienngocrong_cover.jpg"
+		},
 ];
 
 /* ================= HÀM HỖ TRỢ PATH ================= */
 function getBaseImagePath() {
-		const origin = window.location.origin;	
+		const origin = window.location.origin;
 		const pathname = window.location.pathname;
-		// Giả sử thư mục gốc là /Book/
 		if(pathname.includes('/Book/')) return origin + '/Book/';
-		// Nếu không có /Book/ (ví dụ: đang ở repo root), dùng path hiện tại
 		return origin + pathname.substring(0, pathname.lastIndexOf('/') + 1);
 }
 const BASE_PATH = getBaseImagePath();
@@ -280,20 +217,12 @@ let currentChapterPath = '';
 document.addEventListener('DOMContentLoaded', initializePage);
 
 function initializePage() {
-    // ⭐️ DI CHUYỂN NÚT VÀ STATUS VÀO HEADER
-    const headerControlsDiv = document.getElementById('headerControls');
-    const loadComicsBtn = document.createElement('button');
-    loadComicsBtn.id = 'loadComicsBtn';
-    loadComicsBtn.textContent = '🔄 Tải Danh Sách Truyện';
-    const statusEl = document.createElement('p');
-    statusEl.id = 'status';
-
-    headerControlsDiv.appendChild(loadComicsBtn);
-    headerControlsDiv.appendChild(statusEl);
-    headerControlsDiv.style.display = 'flex'; // Hiện lại controls trong header
-
 		const params = new URLSearchParams(window.location.search);
-		const folderParam = params.get('folder');	
+		const folderParam = params.get('folder');
+		
+		// Ẩn nút "Load Chapter" (đã ẩn trong HTML nhưng để phòng hờ)
+		const loadChapterBtn = document.getElementById('loadChapterBtn');
+		if (loadChapterBtn) loadChapterBtn.style.display = 'none';	
 		
 		// Bắt sự kiện khi thay đổi chapter
 		const chapterSelect = document.getElementById('chapterSelect');
@@ -320,18 +249,14 @@ function showListPage() {
 		document.getElementById('mainTitle').textContent = 'Truyện Tranh Online';
 		document.getElementById('comicViewer').style.display = 'none';
 		document.getElementById('comicList').style.display = 'block';
-    // Hiển thị controls trong header khi ở trang danh sách
-    document.getElementById('headerControls').style.display = 'flex'; 
+		document.getElementById('controls').style.display = 'none'; // Ẩn hoàn toàn controls cũ
 
-		const loadBtn = document.getElementById('loadComicsBtn');
-		loadBtn.removeEventListener('click', loadComics);
-		loadBtn.addEventListener('click', loadComics);
-		loadComics();	
+		// Tự động tải danh sách truyện (Không cần nút)
+		loadComics();
 }
 
 function loadComics() {
 		const comicsContainer = document.getElementById('comicsContainer');
-		const statusEl = document.getElementById('status');
 		const comics = COMIC_DATA_JSON;
 		comicsContainer.innerHTML = '';
 			
@@ -343,11 +268,11 @@ function loadComics() {
 				const comicLink = document.createElement('a');
 				comicLink.href = `index.html?folder=${encodeURIComponent(comic.folder)}`;
 				
-				// Tạo đường dẫn cover đầy đủ: basePath + comic.cover
-				const coverSrc = comic.cover ? basePath + comic.cover : 'placeholder.png'; // Thay 'placeholder.png' bằng ảnh mặc định nếu cần
+				// Tạo đường dẫn cover đầy đủ
+				const coverSrc = comic.cover ? basePath + comic.cover : 'placeholder.png';	
 				
 				comicLink.innerHTML = `
-            <img src="${coverSrc}" alt="${comic.title} Cover" class="comic-cover">
+						<img src="${coverSrc}" alt="${comic.title} Cover" class="comic-cover">
 						<h3>${comic.title}</h3>
 						<p>${comic.description}</p>
 						<p class="view-link" style="margin-top: 5px;">Xem ngay &rarr;</p>
@@ -355,13 +280,11 @@ function loadComics() {
 				comicDiv.appendChild(comicLink);
 				comicsContainer.appendChild(comicDiv);
 		});
-		statusEl.textContent = `✅ Đã tải: ${comics.length} truyện.`;
 }
 
 /* ================= VIEWER PAGE (INIT) ================= */
 async function showViewerPage(folderParam) {
-    // Ẩn controls list
-    document.getElementById('headerControls').style.display = 'none'; 
+		document.getElementById('controls').style.display = 'none';
 		document.getElementById('comicList').style.display = 'none';
 		document.getElementById('comicViewer').style.display = 'block';
 		document.getElementById('backLink').style.display = 'block';
@@ -372,11 +295,11 @@ async function showViewerPage(folderParam) {
 
 		const currentComic = COMIC_DATA_JSON.find(c => c.folder === currentComicBase);
 		document.getElementById('mainTitle').textContent = currentComic ? currentComic.title : currentComicBase;
-    document.getElementById('subText').textContent = currentComic ? currentComic.description : 'Đang tải chương...';
+        document.getElementById('subText').textContent = currentComic ? currentComic.description : 'Đang tải chương...';
 
 		const chapterSelect = document.getElementById('chapterSelect');
 		const apiStatus = document.getElementById('apiStatus');
-			
+
 		chapterSelect.innerHTML = '<option>Đang tìm Chap...</option>';
 		apiStatus.textContent = 'Đang kết nối...';
 
@@ -388,24 +311,24 @@ async function showViewerPage(folderParam) {
 		try {
 				const res = await fetch(apiUrl);
 				if (!res.ok) {
-						throw new Error("Lỗi kết nối API");	
+						throw new Error("Lỗi kết nối API");
 				}
 				const items = await res.json();
 				chapters = items
-						.filter(item => item.type === 'dir' && item.name.toLowerCase().startsWith('chap'))
+						.filter(item => item.type === 'dir')
 						.map(item => item.name)
 						.sort((a, b) => {
 								const numA = parseInt((a.match(/\d+/) || [0])[0]);
 								const numB = parseInt((b.match(/\d+/) || [0])[0]);
 								return numA - numB;
 						});
-				apiStatus.textContent = '';	
+				apiStatus.textContent = '';
 		} catch (e) {
 				console.error(e);
 				apiStatus.innerHTML = ``;
 		}
 
-		chapterSelect.innerHTML = '';	
+		chapterSelect.innerHTML = '';
 
 		if (chapters.length > 0) {
 				chapters.forEach(ch => {
@@ -424,21 +347,24 @@ async function showViewerPage(folderParam) {
 				// Tự động load chapter khi khởi tạo
 				loadComicPagesFast(`${currentComicBase}/${chapterToLoad}`);
 		} else {
-				apiStatus.textContent = 'Không tìm thấy chương nào.';
-        // Vẫn gọi load để hiển thị thông báo "Không tìm thấy ảnh" nếu cần
-				loadComicPagesFast(`${currentComicBase}/Chap0001`); 
+				const defaultChap = initialChapter || 'Chap1';
+				const opt = document.createElement('option');
+				opt.value = defaultChap;
+				opt.textContent = `${defaultChap} (Mặc định)`;
+				chapterSelect.appendChild(opt);
+				loadComicPagesFast(`${currentComicBase}/${defaultChap}`);
 		}
 }
 
 
 /* ================= LOAD ẢNH BẰNG API (KHÔNG DÙNG VÒNG LẶP ĐOÁN) ================= */
 async function loadComicPagesFast(folderPath) {
-    currentChapterPath = folderPath; 
+		currentChapterPath = folderPath; 
 		const viewer = document.getElementById('viewerContainer');
 		const statusViewerEl = createOrGetStatusElement(viewer);
 		viewer.innerHTML = ''; 
 		viewer.appendChild(statusViewerEl);
-    
+			
 		statusViewerEl.textContent = '🚀 Đang tải danh sách ảnh...';
 
 		const [comicBase, chapterFolder] = folderPath.split('/');
@@ -452,9 +378,8 @@ async function loadComicPagesFast(folderPath) {
 				}
 				const items = await res.json();
 				
-				// 1. Lọc và Sắp xếp tên file ảnh
 				const imageFiles = items
-						.filter(item => item.type === 'file' && (item.name.endsWith('.jpg') || item.name.endsWith('.png') || item.name.endsWith('.webp'))) // Thêm .webp nếu cần
+						.filter(item => item.type === 'file' && (item.name.endsWith('.jpg') || item.name.endsWith('.png')))
 						.map(item => item.name)
 						.sort((a, b) => {
 								const numA = parseInt(a.match(/\d+/)?.[0] || '0');
@@ -463,11 +388,10 @@ async function loadComicPagesFast(folderPath) {
 						});
 
 				if (imageFiles.length === 0) {
-						statusViewerEl.textContent = `Không tìm thấy bất kỳ file ảnh nào trong chương ${chapterFolder}.`;
+						statusViewerEl.textContent = 'Không tìm thấy bất kỳ file ảnh nào trong chương này (.jpg hoặc .png).';
 						return;
 				}
 
-				// 2. Tạo URL cơ sở và hiển thị ảnh
 				const baseContentUrl = `${BASE_PATH}${GITHUB_CONFIG.COMIC_DIR}/${folderPath}/`;
 				
 				const fragment = document.createDocumentFragment();
@@ -479,97 +403,93 @@ async function loadComicPagesFast(folderPath) {
 						img.className = 'comic-page';
 						img.alt = `Trang ${index + 1} (${fileName})`;
 						img.src = baseContentUrl + fileName;
-            img.dataset.status = 'loading'; 
+						img.dataset.status = 'loading'; 
 
-            img.onload = function() {
-                this.dataset.status = 'loaded';
-                // Xóa icon lỗi nếu có
-                const errorIcon = this.nextElementSibling;
-                if(errorIcon && errorIcon.classList.contains('error-icon')) {
-                    errorIcon.remove();
-                }
-            };
+						img.onload = function() {
+								this.dataset.status = 'loaded';
+								// Xóa icon lỗi nếu có
+								const errorIcon = this.nextElementSibling;
+								if(errorIcon && errorIcon.classList.contains('error-icon')) {
+										errorIcon.remove();
+								}
+						};
 
-            img.onerror = function() {
-                this.dataset.status = 'failed';
-                // Thêm icon lỗi (X)
-                let errorIcon = this.nextElementSibling;
-                if (!errorIcon || !errorIcon.classList.contains('error-icon')) {
-                    errorIcon = document.createElement('span');
-                    errorIcon.className = 'error-icon';
-                    errorIcon.textContent = '❌ Lỗi tải ảnh';
-                    errorIcon.style.cssText = 'color: #c0392b; font-weight: bold; margin-top: 5px; display: block; text-align: center;';
-                    this.parentNode.insertBefore(errorIcon, this.nextSibling);
-                }
-            };
+						img.onerror = function() {
+								this.dataset.status = 'failed';
+								// Thêm icon lỗi (X)
+								let errorIcon = this.nextElementSibling;
+								if (!errorIcon || !errorIcon.classList.contains('error-icon')) {
+										errorIcon = document.createElement('span');
+										errorIcon.className = 'error-icon';
+										errorIcon.textContent = '❌ Lỗi tải ảnh';
+										errorIcon.style.cssText = 'color: #c0392b; font-weight: bold; margin-top: 5px; display: block;';
+										this.parentNode.insertBefore(errorIcon, this.nextSibling);
+								}
+						};
 						
 						imgContainer.appendChild(img);
 						fragment.appendChild(imgContainer);
 				});
 
-				// 3. Hiển thị tất cả ảnh cùng lúc và xóa status
+				// Hiển thị tất cả ảnh cùng lúc
 				viewer.insertBefore(fragment, statusViewerEl);
-				statusViewerEl.textContent = ''; 
+
+				// Xóa dòng trạng thái
+				statusViewerEl.textContent = '';	
 
 		} catch (e) {
 				console.error("Lỗi khi tải trang bằng API:", e);
-				statusViewerEl.textContent = `❌ Lỗi: Không thể tải danh sách file cho chương ${chapterFolder}.`;
+				statusViewerEl.textContent = `❌ Lỗi: Không thể tải danh sách file.`;
 		}
 }
 
-// Hàm hỗ trợ tạo/lấy status element (giữ nguyên)
+// Hàm hỗ trợ tạo/lấy status element
 function createOrGetStatusElement(viewer) {
-    let statusViewerEl = document.getElementById('status-viewer');
-    if (!statusViewerEl) {
-        statusViewerEl = document.createElement('p');
-        statusViewerEl.id = 'status-viewer';
-        statusViewerEl.style.color = '#777';
-        statusViewerEl.style.fontStyle = 'italic';
-        statusViewerEl.style.textAlign = 'center';
-    }
-    return statusViewerEl;
+		let statusViewerEl = document.getElementById('status-viewer');
+		if (!statusViewerEl) {
+				statusViewerEl = document.createElement('p');
+				statusViewerEl.id = 'status-viewer';
+				statusViewerEl.style.color = '#777';
+				statusViewerEl.style.fontStyle = 'italic';
+				statusViewerEl.style.textAlign = 'center';
+		}
+		return statusViewerEl;
 }
 
 /* ================= CHỨC NĂNG RELOAD LỖI ================= */
 function reloadFailedImages() {
-    const viewer = document.getElementById('viewerContainer');
-    const statusViewerEl = createOrGetStatusElement(viewer);
-    
-    // Tìm tất cả các thẻ <img> có thuộc tính data-status="failed"
-    const failedImages = viewer.querySelectorAll('img[data-status="failed"]');
-    
-    if (failedImages.length === 0) {
-        statusViewerEl.textContent = '🎉 Không có ảnh nào bị lỗi cần tải lại.';
-        setTimeout(() => statusViewerEl.textContent = '', 3000);
-        return;
-    }
+		const viewer = document.getElementById('viewerContainer');
+		const statusViewerEl = createOrGetStatusElement(viewer);
+			
+		// Tìm tất cả các thẻ <img> có thuộc tính data-status="failed"
+		const failedImages = viewer.querySelectorAll('img[data-status="failed"]');
+			
+		if (failedImages.length === 0) {
+				statusViewerEl.textContent = '🎉 Không có ảnh nào bị lỗi cần tải lại.';
+				setTimeout(() => statusViewerEl.textContent = '', 3000);
+				return;
+		}
 
-    statusViewerEl.textContent = `🔄 Đang tải lại ${failedImages.length} ảnh bị lỗi...`;
+		statusViewerEl.textContent = `🔄 Đang tải lại ${failedImages.length} ảnh bị lỗi...`;
 
-    let reloadCount = 0;
-    failedImages.forEach(img => {
-        // Đặt lại trạng thái
-        img.dataset.status = 'loading'; 
-        
-        // Buộc trình duyệt tải lại ảnh: gán src rỗng sau đó gán lại src gốc
-        const originalSrc = img.src;
-        img.src = ''; 
-        img.src = originalSrc; 
-        reloadCount++;
-    });
+		failedImages.forEach(img => {
+				img.dataset.status = 'loading';	
+					
+				// Buộc trình duyệt tải lại ảnh
+				const originalSrc = img.src;
+				img.src = '';	
+				img.src = originalSrc;	
+		});
 
-    if (reloadCount > 0) {
-        // Dùng setTimeout để kiểm tra trạng thái sau khi các ảnh đã có thời gian load
-        setTimeout(() => {
-            const stillFailed = viewer.querySelectorAll('img[data-status="failed"]').length;
-            if (stillFailed === 0) {
-                statusViewerEl.textContent = `✅ Tải lại thành công!`;
-            } else {
-                statusViewerEl.textContent = `⚠️ Vẫn còn ${stillFailed} ảnh chưa tải được. Thử lại sau.`;
-            }
-            setTimeout(() => statusViewerEl.textContent = '', 3000); 
-        }, 2000); // 2 giây chờ load lại
-    }
+		setTimeout(() => {
+				const stillFailed = viewer.querySelectorAll('img[data-status="failed"]').length;
+				if (stillFailed === 0) {
+						statusViewerEl.textContent = `✅ Tải lại thành công!`;
+				} else {
+						statusViewerEl.textContent = `⚠️ Vẫn còn ${stillFailed} ảnh chưa tải được. Thử lại sau.`;
+				}
+				setTimeout(() => statusViewerEl.textContent = '', 3000); 
+		}, 1500);	
 }
 
 
@@ -579,6 +499,5 @@ document.getElementById('backLink').addEventListener('click', function(e) {
 		window.location.href = 'index.html';
 });
 </script>
-
 </body>
 </html>
