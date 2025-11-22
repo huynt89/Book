@@ -1,0 +1,237 @@
+/* RESET VÀ CẤU HÌNH TỔNG THỂ */
+html, body {
+    height: 100%; 
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    overflow: hidden; 
+}
+#adminContainer { 
+    width: 95%; 
+    max-width: 1200px;
+    height: calc(100vh - 40px); 
+    margin: 20px auto; 
+    padding: 15px; 
+    background: #fff; 
+    border-radius: 10px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+    display: flex;
+    flex-direction: column;
+}
+
+/* TIÊU ĐỀ & KHU VỰC CHÍNH */
+header h1 { margin: 0 0 5px 0; font-size: 1.5em; color: #3498db; }
+header p { margin-bottom: 10px; font-size: 0.9em; color: #777; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+
+/* BỐ CỤC 2 CỘT CHÍNH */
+#twoColumnLayout {
+    display: grid;
+    grid-template-columns: 3fr 2fr; 
+    gap: 20px;
+    flex-grow: 1; 
+    min-height: 0; 
+}
+
+.functional-zone {
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fdfdfd;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%; 
+}
+
+/* CÁC THÀNH PHẦN FORM CHUNG */
+.form-group { margin-bottom: 8px; }
+.form-group label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.9em; color: #444; }
+
+/* Định dạng chung cho input, nhưng TRỪ input nằm trong .input-with-button ra để xử lý riêng */
+.form-group input:not([type="file"]), .form-group textarea, .form-group select { 
+    width: 100%; 
+    padding: 7px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    box-sizing: border-box; 
+    font-size: 0.9em;
+}
+
+/* ============================================================
+   KHU VỰC CĂN CHỈNH CỘT TRÁI (#detailForm)
+   ============================================================ */
+#detailForm {
+    display: grid;
+    grid-template-columns: auto 1fr; /* Cột 1: Nhãn, Cột 2: Nội dung */
+    gap: 10px; 
+    align-items: center;
+}
+#detailForm .form-group {
+    margin-bottom: 0; 
+    display: contents; /* Giữ cấu trúc grid phẳng */
+}
+#detailForm label {
+    text-align: right; 
+    padding-right: 10px;
+    margin-bottom: 0;
+    white-space: nowrap; /* Ngăn nhãn bị xuống dòng */
+}
+
+/* Mô tả chiếm 2 dòng ở dưới cùng */
+#descriptionGroup {
+    grid-column: 1 / span 2; 
+}
+#comicDescription {
+    min-height: 50px; 
+    resize: vertical;
+}
+
+/* Đẩy các Input, Textarea và Group vào cột số 2 */
+#detailForm > .form-group > input, 
+#detailForm > .form-group > textarea, 
+#detailForm > .form-group > .input-with-button {
+    grid-column: 2;
+    width: 100%; /* Chiếm hết chiều ngang của cột 2 */
+}
+
+/* 🌟 ĐÃ SỬA: THU GỌN LISTBOX (SELECT BOX) 🌟 */
+#comicSelector {
+    flex-grow: 1;
+	height: 35px;
+    min-height: 35px; /* Giảm chiều cao tối thiểu (2-3 hàng) */
+    max-height: 35px; /* Giảm chiều cao tối đa để thu gọn Listbox */
+    margin-bottom: 10px;
+}
+
+/* ACTION GROUP */
+#actionGroup {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+#actionGroup button {
+    flex-grow: 1;
+    padding: 8px 10px;
+}
+
+/* ============================================================
+   KHU VỰC CỘT PHẢI (UPLOAD)
+   ============================================================ */
+.file-upload-section {
+    padding: 10px 0;
+    border-bottom: 1px dashed #eee;
+}
+.file-upload-section:last-child {
+    border-bottom: none;
+}
+.file-upload-section h4 { margin-top: 0; margin-bottom: 5px; font-size: 1.1em; color: #2980b9; }
+
+/* Nhóm Upload File cũng dùng Flexbox cho đồng bộ */
+.upload-input-group {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    width: 100%;
+}
+.upload-input-group input[type="file"] {
+    flex-grow: 1;
+    width: auto;
+}
+.upload-input-group button {
+    flex-shrink: 0;
+    width: auto;
+}
+
+/* INPUT VÀ NÚT TẠO FOLDER (Sử dụng Flexbox để căn ngang) */
+.input-with-button {
+    display: flex !important; /* Bắt buộc dùng Flexbox */
+    flex-direction: row;      /* Xếp ngang */
+    gap: 5px;                 /* Khoảng cách giữa Input và Nút */
+    width: 100%;
+    align-items: stretch;     /* Kéo giãn chiều cao cho bằng nhau */
+}
+
+.input-with-button input {
+    flex-grow: 1;             /* Input chiếm toàn bộ phần còn lại */
+    width: auto !important;   /* Vô hiệu hóa width: 100% gây lỗi trước đó */
+    margin: 0;
+}
+
+.input-with-button button {
+    flex-shrink: 0;           /* Không cho phép nút bị co lại */
+    width: auto;              /* Chiều rộng tự nhiên theo nội dung */
+    padding: 7px 15px; /* Giảm padding trên dưới cho phù hợp với input */
+    background: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;      /* Giữ chữ "Tạo Folder" trên 1 dòng */
+}
+.input-with-button button:hover {
+    background: #219653;
+}
+
+
+/* LOG SECTION */
+.log-container {
+    margin-top: 15px;
+    height: 15vh; 
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+.log-container h3 { 
+    margin-top: 0; 
+    margin-bottom: 5px; 
+    font-size: 1.1em; 
+    color: #2c3e50;
+}
+#log { 
+    padding: 10px; 
+    background: #f7f7f7; 
+    border: 1px solid #ddd; 
+    border-radius: 4px;
+    flex-grow: 1;
+    overflow-y: auto; 
+    white-space: pre-wrap; 
+    font-family: monospace; 
+    font-size: 11px; 
+}
+
+button { 
+    padding: 10px 12px; 
+    background: #3498db; 
+    color: white; 
+    border: none; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-weight: bold;
+}
+button.red { background: #e74c3c; }
+
+/* MEDIA QUERY: MOBILE */
+@media (max-width: 900px) {
+    #twoColumnLayout {
+        grid-template-columns: 1fr; 
+        gap: 25px;
+        overflow-y: auto; 
+    }
+    #adminContainer {
+         height: auto; 
+         min-height: calc(100vh - 40px); 
+         overflow-y: auto; 
+    }
+    .log-container {
+        margin-top: 20px;
+        height: 200px; 
+    }
+    .col-left { min-height: auto; }
+    
+    /* Reset Grid trên mobile để hiển thị dọc */
+    #detailForm { display: block; }
+    #detailForm .form-group { display: block; margin-bottom: 10px; }
+    #detailForm label { text-align: left; padding-right: 0; }
+    #detailForm input, #detailForm textarea, #detailForm .input-with-button, #descriptionGroup { grid-column: auto; }
+}
