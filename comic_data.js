@@ -8,7 +8,7 @@ const COMIC_DATA_JSON = [
 		folder:  "Doraemon",
 		upload_date:  "2025-11-22",
 		description:  "Mèo máy Doraemon và Nobita",
-		cover:  "Test1"
+		cover:  "Test1.jpg"
 	},
 	{
 		title:  "Test1",
