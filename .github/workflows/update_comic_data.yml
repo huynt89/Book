@@ -1,0 +1,61 @@
+name: Update Comic Data File
+
+# Quy trình này sẽ được kích hoạt MỖI KHI có push (đẩy lên) 
+# đối với file tạm thời 'temp_data.json'
+on:
+  push:
+    paths:
+      - 'temp_data.json'
+      
+jobs:
+  update_data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Bước 1: Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Cần Token (Secret) để có thể commit lại vào repo
+          token: ${{ secrets.PAT_TOKEN }}
+
+      # Bước 2: Đọc dữ liệu từ file tạm thời
+      - name: Read Temporary Data
+        id: read_temp
+        run: |
+          TEMP_DATA=$(cat temp_data.json)
+          echo "TEMP_DATA=$TEMP_DATA" >> $GITHUB_OUTPUT
+
+      # Bước 3: Định dạng lại và Ghi đè file comic_data.js
+      - name: Format and Overwrite comic_data.js
+        run: |
+          # Bóc tách mảng JSON từ TEMP_DATA (Giả định TEMP_DATA là mảng JSON thuần)
+          JSON_ARRAY='${{ steps.read_temp.outputs.TEMP_DATA }}'
+
+          # Sử dụng công cụ dòng lệnh (như jq) để định dạng và ghi vào file JS
+          # Vì môi trường Actions không có browser JS, chúng ta dùng Bash/JQ.
+          # Phần định dạng này cần phải mô phỏng lại hàm formatComicData trong JS
+          
+          # Tên file tạm thời cho nội dung mảng (dùng JQ để đảm bảo định dạng JSON)
+          echo "$JSON_ARRAY" | jq '.' > formatted_json_array.json
+
+          # Tạo nội dung đầy đủ cho comic_data.js
+          echo "/* ================= CẤU HÌNH TRUYỆN ================= */" > comic_data.js
+          echo "" >> comic_data.js
+          echo "// Lưu ý: Đường dẫn ảnh bìa đã được đổi thành thư mục 'cover/' " >> comic_data.js
+          echo "// Bạn chỉ cần điền tên file ảnh ở đây (ví dụ: 'YugiOh_cover.jpg')" >> comic_data.js
+          
+          # Thêm mảng JSON đã định dạng vào file
+          echo "const COMIC_DATA_JSON = $(cat formatted_json_array.json);" >> comic_data.js
+          
+      # Bước 4: Commit và Xóa file tạm thời
+      - name: Commit changes and Cleanup
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          # Chỉ commit khi có thay đổi trong comic_data.js
+          commit_message: 'ci: Auto update comic_data.js via Web Admin'
+          # Xóa file tạm thời
+          commit_options: '--no-verify --amend --no-edit'
+          file_pattern: |
+            comic_data.js
+            temp_data.json # Xóa file tạm sau khi commit xong
