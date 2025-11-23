@@ -1,246 +1,179 @@
-/* RESET VÀ CẤU HÌNH TỔNG THỂ */
+/* ============================================================
+   1. CẤU HÌNH CHUNG
+   ============================================================ */
 html, body {
-		height: 100%;	
-		margin: 0;
-		padding: 0;
-		font-family: Arial, sans-serif;
-		background-color: #f0f2f5;
-		overflow: hidden; /* FIX: Ngăn cuộn kép trên body/html khi desktop */
-}
-#adminContainer {	
-		width: 95%;	
-		max-width: 1200px;
-		height: calc(100vh - 40px);	
-		margin: 20px auto;	
-		padding: 15px;	
-		background: #fff;	
-		border-radius: 10px;	
-		box-shadow: 0 4px 12px rgba(0,0,0,0.1);	
-		display: flex;
-		flex-direction: column;
-	/* XÓA: overflow-y: auto; (Sẽ được đặt lại trong Media Query) */
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    overflow: hidden; /* Desktop: Khóa cuộn body */
 }
 
-/* TIÊU ĐỀ & KHU VỰC CHÍNH */
-header h1 { margin: 0 0 5px 0; font-size: 1.5em; color: #3498db; }
-header p { margin-bottom: 10px; font-size: 0.9em; color: #777; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+#adminContainer {
+    width: 96%;
+    max-width: 1200px;
+    height: calc(100vh - 30px); /* Tăng chiều cao khung lên một chút */
+    margin: 15px auto;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; 
+}
 
-/* BỐ CỤC 2 CỘT CHÍNH */
+header h1 { margin: 0 0 10px 0; font-size: 1.4em; color: #3498db; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+
+/* BỐ CỤC 2 CỘT */
 #twoColumnLayout {
-		display: grid;
-		grid-template-columns: 3fr 2fr;	
-		gap: 20px;
-		flex-grow: 1;	
-		min-height: 0;	
+    display: grid;
+    grid-template-columns: 3fr 2fr; 
+    gap: 20px;
+    flex-grow: 1;
+    min-height: 0; 
 }
 
 .functional-zone {
-		padding: 15px;
-		border: 1px solid #e0e0e0;
-		border-radius: 8px;
-		background: #fdfdfd;
-		display: flex;
-		flex-direction: column;
-		min-height: 100%;	
+    padding: 10px 15px; /* Giảm padding dọc của cột */
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background: #fdfdfd;
+    display: flex;
+    flex-direction: column;
+    height: 100%; 
+    box-sizing: border-box;
 }
 
-/* CÁC THÀNH PHẦN FORM CHUNG */
-.form-group { margin-bottom: 8px; }
-.form-group label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.9em; color: #444; }
-
-/* Định dạng chung cho input, nhưng TRỪ input nằm trong .input-with-button ra để xử lý riêng */
-.form-group input:not([type="file"]), .form-group textarea, .form-group select {	
-		width: 100%;	
-		padding: 7px;	
-		border: 1px solid #ccc;	
-		border-radius: 4px;	
-		box-sizing: border-box;	
-		font-size: 0.9em;
+/* --- TIÊU ĐỀ CỘT PHẢI (CHỈNH SỬA) --- */
+.col-right h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.1em; /* Giảm cỡ chữ */
+    color: #2c3e50;
+    border-bottom: 1px solid #ddd; /* Thêm gạch chân cho gọn */
+    padding-bottom: 5px;
 }
+
+/* --- CÁC THÀNH PHẦN FORM --- */
+.form-group { 
+    margin-bottom: 10px; /* Giảm khoảng cách giữa các ô nhập */
+    display: block;      
+}
+
+label { 
+    display: block;      
+    margin-bottom: 3px;  /* Giảm khoảng cách giữa Label và Input */
+    font-weight: 600; 
+    font-size: 0.85em; 
+    color: #555; 
+    text-align: left;    
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 6px 8px; /* Giảm padding trong ô nhập liệu */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 0.9em;
+}
+
+/* --- CĂN CHỈNH NGANG CHO INPUT + BUTTON --- */
+.input-with-button, .upload-input-group {
+    display: flex;
+    gap: 5px;
+    width: 100%;
+}
+.input-with-button input, .upload-input-group input {
+    flex-grow: 1;
+    width: auto; 
+}
+.input-with-button button, .upload-input-group button {
+    flex-shrink: 0;
+    width: auto;
+    padding: 0 12px;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+/* --- FORM CHI TIẾT --- */
+#detailForm { display: block; }
+#detailForm input, #detailForm textarea, #detailForm .input-with-button { width: 100%; }
+#comicDescription { height: 120px; resize: vertical; } /* Giảm chiều cao mặc định một chút */
+
+/* --- CÁC THÀNH PHẦN KHÁC --- */
+#comicSelector { height: 32px; font-size: 0.9em; }
+#actionGroup { display: flex; gap: 10px; margin-bottom: 10px; }
+#actionGroup button { flex-grow: 1; padding: 8px; }
+
+/* --- KHU VỰC UPLOAD (CHỈNH SỬA GỌN HƠN) --- */
+.file-upload-section { 
+    padding: 8px 0; /* Giảm khoảng cách trên dưới */
+    border-bottom: 1px dashed #eee; 
+}
+.file-upload-section:last-child { border-bottom: none; }
+.file-upload-section h4 { 
+    margin: 0 0 5px 0; 
+    font-size: 0.95em; 
+    color: #2980b9; 
+}
+
+/* --- LOG TRẠNG THÁI (CHỈNH SỬA GỌN HƠN) --- */
+.log-container { 
+    margin-top: 10px; /* Kéo lên gần hơn */
+    /*flex-grow: 1; */
+	height: 16.5vh;
+    display: flex; 
+    flex-direction: column; 
+    min-height: 0; 
+}
+.log-container h4 {
+    margin: 0 0 3px 0; /* Sát với ô log hơn */
+    font-size: 0.9em;
+    color: #333;
+}
+#log { 
+    padding: 8px; /* Giảm đệm bên trong */
+    background: #f7f7f7; 
+    border: 1px solid #ddd; 
+    border-radius: 4px; 
+    flex-grow: 1; 
+    overflow-y: scroll; 
+    white-space: pre-wrap; 
+    font-family: monospace; 
+    font-size: 10px; /* Chữ nhỏ hơn chút cho gọn */
+    line-height: 1.3;
+}
+
+/* BUTTON STYLES */
+button { padding: 6px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+button:hover { background: #2980b9; }
+button.red { background: #e74c3c; } button.red:hover { background: #c0392b; }
+#createComicFolderBtn, #createChapterFolderBtn { background: #f39c12; } #createComicFolderBtn:hover, #createChapterFolderBtn:hover { background: #d35400; }
+
 
 /* ============================================================
-		KHU VỰC CĂN CHỈNH CỘT TRÁI (#detailForm)
-		============================================================ */
-#detailForm {
-		display: grid;
-		grid-template-columns: auto 1fr; /* Cột 1: Nhãn, Cột 2: Nội dung */
-		gap: 10px;	
-		align-items: center;
-}
-#detailForm .form-group {
-		margin-bottom: 0;	
-		display: contents; /* Giữ cấu trúc grid phẳng */
-}
-#detailForm label {
-		text-align: right;	
-		padding-right: 10px;
-		margin-bottom: 0;
-		white-space: nowrap; /* Ngăn nhãn bị xuống dòng */
-}
-
-/* Mô tả chiếm 2 dòng ở dưới cùng */
-#descriptionGroup {
-		grid-column: 1 / span 2;	
-}
-#comicDescription {
-		min-height: 100px;	
-		resize: vertical;
-}
-
-/* Đẩy các Input, Textarea và Group vào cột số 2 */
-#detailForm > .form-group > input,	
-#detailForm > .form-group > textarea,	
-#detailForm > .form-group > .input-with-button {
-		grid-column: 2;
-		width: 100%; /* Chiếm hết chiều ngang của cột 2 */
-}
-
-/* 🌟 ĐÃ SỬA: THU GỌN LISTBOX (SELECT BOX) 🌟 */
-#comicSelector {
-		flex-grow: 1;
-	height: 35px;
-		min-height: 35px; /* Giảm chiều cao tối thiểu (2-3 hàng) */
-		max-height: 35px; /* Giảm chiều cao tối đa để thu gọn Listbox */
-		margin-bottom: 10px;
-}
-
-/* ACTION GROUP */
-#actionGroup {
-		display: flex;
-		gap: 10px;
-		margin-top: 10px;
-		margin-bottom: 15px;
-}
-#actionGroup button {
-		flex-grow: 1;
-		padding: 8px 10px;
-}
-
-/* ============================================================
-		KHU VỰC CỘT PHẢI (UPLOAD)
-		============================================================ */
-.file-upload-section {
-		padding: 10px 0;
-		border-bottom: 1px dashed #eee;
-}
-.file-upload-section:last-child {
-		border-bottom: none;
-}
-.file-upload-section h4 { margin-top: 0; margin-bottom: 5px; font-size: 1.1em; color: #2980b9; }
-
-/* Nhóm Upload File cũng dùng Flexbox cho đồng bộ */
-.upload-input-group {
-		display: flex;
-		gap: 5px;
-		align-items: center;
-		width: 100%;
-}
-.upload-input-group input[type="file"] {
-		flex-grow: 1;
-		width: auto;
-}
-.upload-input-group button {
-		flex-shrink: 0;
-		width: auto;
-}
-
-/* INPUT VÀ NÚT TẠO FOLDER (Sử dụng Flexbox để căn ngang) */
-.input-with-button {
-		display: flex !important; /* Bắt buộc dùng Flexbox */
-		flex-direction: row;			/* Xếp ngang */
-		gap: 5px;									/* Khoảng cách giữa Input và Nút */
-		width: 100%;
-		align-items: stretch;			/* Kéo giãn chiều cao cho bằng nhau */
-}
-
-.input-with-button input {
-		flex-grow: 1;							/* Input chiếm toàn bộ phần còn lại */
-		width: auto !important;		/* Vô hiệu hóa width: 100% gây lỗi trước đó */
-		margin: 0;
-}
-
-.input-with-button button {
-		flex-shrink: 0;						/* Không cho phép nút bị co lại */
-		width: auto;							/* Chiều rộng tự nhiên theo nội dung */
-		padding: 7px 15px; /* Giảm padding trên dưới cho phù hợp với input */
-		background: #27ae60;
-		color: white;
-		border: none;
-		border-radius: 4px;
-		cursor: pointer;
-		white-space: nowrap;			/* Giữ chữ "Tạo Folder" trên 1 dòng */
-}
-.input-with-button button:hover {
-		background: #219653;
-}
-
-
-/* LOG SECTION */
-.log-container {
-		margin-top: 11px;
-		height: 21vh;	
-		display: flex;
-		flex-direction: column;
-		min-height: 0;
-}
-.log-container h3 {	
-		margin-top: 0;	
-		margin-bottom: 5px;	
-		font-size: 1.1em;	
-		color: #2c3e50;
-}
-#log {	
-		padding: 10px;	
-		background: #f7f7f7;	
-		border: 1px solid #ddd;	
-		border-radius: 4px;
-		flex-grow: 1;
-		overflow-y: scroll; /* Sửa lại thành 'scroll' nếu muốn thanh cuộn luôn hiện */
-		white-space: pre-wrap;	
-		font-family: monospace;	
-		font-size: 11px;	
-}
-
-button {	
-		padding: 10px 12px;	
-		background: #3498db;	
-		color: white;	
-		border: none;	
-		border-radius: 4px;	
-		cursor: pointer;	
-		font-weight: bold;
-}
-button.red { background: #e74c3c; }
-
-/* MEDIA QUERY: MOBILE */
+   2. MOBILE RESPONSIVE
+   ============================================================ */
 @media (max-width: 900px) {
-    /* Đây là nơi thanh cuộn được kích hoạt lại cho mobile */
-    #adminContainer {
-				height: auto; 
-				min-height: calc(100vh - 40px);	
-				overflow-y: auto; /* FIX: Đảm bảo có cuộn trên mobile */
+    html, body {
+        height: auto !important;
+        overflow-y: auto !important; 
+        overflow-x: hidden;
     }
-
-    /* 1. Thay đổi bố cục Grid 2 cột thành 1 cột */
-		#twoColumnLayout {
-				grid-template-columns: 1fr;	
-				gap: 25px;
-				overflow-y: visible; 
-		}
-		.functional-zone {
-				min-height: auto;
-		}
-		.log-container {
-				margin-top: 20px;
-				height: 200px;	
-		}
-		.col-left {
-				min-height: auto;
-		}
-			
-		/* Reset Grid trên mobile để hiển thị dọc */
-		#detailForm { display: block; }
-		#detailForm .form-group { display: block; margin-bottom: 10px; }
-		#detailForm label { text-align: left; padding-right: 0; }
-		#detailForm input, #detailForm textarea, #detailForm .input-with-button, #descriptionGroup { grid-column: auto; }
+    #adminContainer {
+        height: auto !important; 
+        min-height: 0 !important; 
+        overflow: visible !important;
+        margin-bottom: 30px;
+    }
+    #twoColumnLayout { display: block !important; }
+    .functional-zone {
+        width: 100% !important;
+        margin-bottom: 20px; 
+        height: auto !important;
+    }
+    .log-container { height: 150px; }
 }
