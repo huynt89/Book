@@ -48,7 +48,7 @@ function setupMainListeners() {
 // CÁC HÀM HỖ TRỢ CHUNG
 // ===============================================
 
-function appendLog(message, isError = false, prepend = false) {
+function appendLog(message, isError = false, prepend = true) {
     const timestamp = new Date().toLocaleTimeString('vi-VN');
     const prefix = isError ? '❌ LỖI: ' : '✅ ';
     const newLogEntry = `[${timestamp}] ${prefix}${message}\n`;
