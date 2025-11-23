@@ -227,12 +227,16 @@ button.red { background: #e74c3c; }
 				gap: 25px;
 				overflow-y: visible; 
 		}
-    
+		.functional-zone {
+				min-height: auto;
+		}
 		.log-container {
 				margin-top: 20px;
 				height: 200px;	
 		}
-		.col-left { min-height: auto; }
+		.col-left {
+				min-height: auto;
+		}
 			
 		/* Reset Grid trên mobile để hiển thị dọc */
 		#detailForm { display: block; }
