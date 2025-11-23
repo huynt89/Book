@@ -124,7 +124,7 @@ input, textarea, select {
 .log-container { 
     margin-top: 10px; /* Kéo lên gần hơn */
     /*flex-grow: 1; */
-	height: 16.5vh;
+	height: 115px;
     display: flex; 
     flex-direction: column; 
     min-height: 0; 
