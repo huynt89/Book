@@ -10,7 +10,7 @@
     <div id="adminContainer">
         <header>
             <h1>Quản Lý Dữ Liệu Truyện</h1>
-            <p>Tối ưu hóa cho giao diện một màn hình. Cập nhật file comic_data.js qua GitHub Actions.</p>
+            <p>Cập nhật file comic_data.js qua GitHub Actions.</p>
         </header>
         
         <div id="twoColumnLayout">
@@ -19,7 +19,7 @@
                 <h3 style="margin-top: 0; color: #3498db;">1. Dữ liệu Truyện & Thông tin Chi tiết</h3>
 
                 <div class="form-group">
-                    <label for="comicSelector">Chọn Truyện (A-Z) để Chỉnh sửa:</label>
+                    <label for="comicSelector">Chọn Truyện để chỉnh sửa:</label>
                     <select id="comicSelector" size="1">
                         <option value="">-- Đang tải danh sách --</option>
                     </select>
@@ -49,7 +49,7 @@
 
                     <div class="form-group" id="descriptionGroup">
                         <label for="comicDescription">Mô tả về truyện:</label>
-                        <textarea id="comicDescription" placeholder="Mô tả ngắn gọn về truyện" required></textarea>
+                        <textarea id="comicDescription" required></textarea>
                     </div>
                 </div>
             </div>
@@ -61,34 +61,34 @@
                     <h4>Ảnh Bìa (Cover)</h4>
                     
                     <div class="form-group">
-                        <label for="comicCover">Tên File Ảnh Bìa (cover/):</label>
-                        <input type="text" id="comicCover" placeholder="Ví dụ: Doraemon_cover.jpg" required>
+                        <label for="comicCover">Tên File Ảnh Bìa (ex: Doraemon_cover.jpg):</label>
+                        <input type="text" id="comicCover" required>
                     </div>
 
                     <div class="form-group">
                         <div class="upload-input-group">
                             <input type="file" id="coverFileInput" accept="image/*">
-                            <button id="uploadCoverBtn">⬆️ Upload Ảnh Bìa</button>
+                            <button id="uploadCoverBtn">⬆️ Upload</button>
                         </div>
                     </div>
                 </div>
                 
                 <div class="file-upload-section">
-                    <h4>Ảnh Chapter</h4>
+                    <h4>Chapter</h4>
                     
                     <div class="form-group">
-                        <label for="chapterInput">Tên Chapter Mới (Ví dụ: Chap01):</label>
+                        <label for="chapterInput">Tên Chapter Mới (ex: Chap1):</label>
                         <div class="input-with-button">
-                            <input type="text" id="chapterInput" placeholder="Chỉ cần tên, ví dụ: Chap01">
+                            <input type="text" id="chapterInput">
                             <button id="createChapterFolderBtn">📂 Tạo Folder</button>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label>Chọn Ảnh Chapter (Nhiều file):</label>
+                        <label>Chọn Ảnh Chapter:</label>
                         <div class="upload-input-group">
                             <input type="file" id="chapterFileInput" multiple accept="image/*">
-                            <button id="uploadChapterBtn">⬆️ Upload Ảnh Chapter</button>
+                            <button id="uploadChapterBtn">⬆️ Upload</button>
                         </div>
                     </div>
                 </div>
